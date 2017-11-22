@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "957678858722",
+    "project_id": "gamproject-186706"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:957678858722:android:b928c89b11250c75",
+        "android_client_info": {
+          "package_name": "com.hchooney.qewqs.gam"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "957678858722-1vflgoue26gne5536rprol2tclp0pq95.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hchooney.qewqs.gam",
+            "certificate_hash": "a8b1358ca7f4f175906c3bebe4fa6434820b5939"
+          }
+        },
+        {
+          "client_id": "957678858722-h2t1po773fjon5rgcuo85331sd1kophm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN_y2CCCX9AOCImozCxUwkvnK9KSGwreE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

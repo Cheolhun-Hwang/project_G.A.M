@@ -6,4 +6,8 @@
 
     <color name="mainThema">#85af4b</color>
     <color name="subThema">#f1ffdd</color>
+
+    <color name="black">#000</color>
+    <color name="white">#fff</color>
+    <color name="alpha">#0000</color>
 </resources>

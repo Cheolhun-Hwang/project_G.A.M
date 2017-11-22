@@ -10,19 +10,21 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="60dp"
         android:background="@color/mainThema">
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/logo_gam"
                 android:id="@+id/imageView"
-                android:layout_marginStart="14dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:layout_alignParentStart="true" />
+                android:layout_marginStart="14dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/logo_gam" />
             <TextView
                 android:textColor="#fff"
                 android:text="G.A.M"
@@ -34,46 +36,52 @@
                 android:layout_toEndOf="@+id/imageView"
                 android:layout_marginStart="9dp" />
 
-            <ImageView
-                android:layout_marginRight="5dp"
-                android:layout_marginLeft="5dp"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_settings_24dp"
-                android:layout_centerVertical="true"
+            <ImageButton
+                android:id="@+id/MainSettingBTN"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 android:layout_marginEnd="10dp"
-                android:id="@+id/MainSettingBTN" />
+                android:layout_marginLeft="7dp"
+                android:layout_marginRight="7dp"
+                android:background="@color/alpha"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_settings_24dp" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/MainMapBTN"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_alignTop="@+id/MainGiftBTN"
-                android:layout_marginEnd="2dp"
-                android:layout_marginLeft="5dp"
+                android:layout_marginLeft="7dp"
                 android:layout_toStartOf="@+id/MainGiftBTN"
+                android:background="@color/alpha"
+                android:scaleType="fitXY"
                 android:src="@drawable/ic_map_24dp" />
 
-            <ImageView
-                android:paddingBottom="2dp"
+            <ImageButton
                 android:id="@+id/MainGiftBTN"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
                 android:layout_centerVertical="true"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
+                android:layout_marginLeft="7dp"
+                android:layout_marginRight="7dp"
                 android:layout_toStartOf="@+id/MainSettingBTN"
-                android:src="@drawable/gift2" />
+                android:background="@drawable/gift2"
+                android:padding="6dp"
+                android:paddingBottom="2dp" />
         </RelativeLayout>
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/subThema">
-
+        android:layout_height="match_parent">
+        <FrameLayout
+            android:id="@+id/Main_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"></FrameLayout>
     </LinearLayout>
 
 </LinearLayout>
