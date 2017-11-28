@@ -16,6 +16,8 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInApi;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.hchooney.qewqs.gam.Database.Account;
+import com.hchooney.qewqs.gam.Dialog.CouponDialogFragment;
+import com.hchooney.qewqs.gam.Dialog.RecyclerList.CouponItem;
 import com.hchooney.qewqs.gam.Fragments.MainFragment;
 import com.hchooney.qewqs.gam.Fragments.MapFragment;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventAdapter;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<NotifyItem> notifylist;
     private static ArrayList<GuideItem> guidelist;
     private static ArrayList<EventItem> eventlist;
+    private static ArrayList<CouponItem> couponlist;
 
     private static int SearchDistance;
     private static GoogleApiClient mGoogleApiClient;
@@ -64,6 +67,12 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setEventlist(ArrayList<EventItem> eventlist) {
         MainActivity.eventlist = eventlist;
+    }
+    public static ArrayList<CouponItem> getCouponlist() {
+        return couponlist;
+    }
+    public static void setCouponlist(ArrayList<CouponItem> couponlist) {
+        MainActivity.couponlist = couponlist;
     }
 
     private ImageButton Map;
@@ -114,7 +123,14 @@ public class MainActivity extends AppCompatActivity {
         Gift.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), CouponActivity.class));
+                //startActivity(new Intent(getApplicationContext(), CouponActivity.class));
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("items", couponlist);
+                CouponDialogFragment fragment = new CouponDialogFragment();
+                fragment.setArguments(bundle);
+
+                fragment.show(manager, "CouponDialogFragment");
+
             }
         });
 
@@ -162,6 +178,15 @@ public class MainActivity extends AppCompatActivity {
         eventlist.add(new EventItem(7, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128869, 37.456607, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(8, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128868, 37.458827, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(9, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128867, 37.451920, "이벤트 당첨 혜택"));
+
+        //coupon
+        //temp
+        couponlist = new ArrayList<CouponItem>();
+        couponlist.add(new CouponItem(1, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
+        couponlist.add(new CouponItem(2, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
+        couponlist.add(new CouponItem(3, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
+        couponlist.add(new CouponItem(4, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
+        couponlist.add(new CouponItem(5, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
     }
 
     @Override

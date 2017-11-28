@@ -23,6 +23,7 @@ public class DetailEventActivity extends AppCompatActivity {
     private final String TAG = "DetailEventActivity";
     private final static int SIGNAL_JOINEVENT = 3001;
 
+    private ImageButton Back;
     private TextView ETitle;
     private TextView ECordination;
     private TextView EProfit;
@@ -72,6 +73,14 @@ public class DetailEventActivity extends AppCompatActivity {
         });
         joinListView = (RecyclerView) findViewById(R.id.DetailEvent_showUpListView);
         joinListView.setHasFixedSize(true);
+
+        Back = (ImageButton) findViewById(R.id.DetailEvent_arrowBack);
+        Back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
     }
 
