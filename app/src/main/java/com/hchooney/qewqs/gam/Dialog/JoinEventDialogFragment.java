@@ -3,6 +3,7 @@ package com.hchooney.qewqs.gam.Dialog;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -41,6 +42,8 @@ public class JoinEventDialogFragment extends DialogFragment {
     private ArrayList<JoinEventItem> list;
     private netWaitDailog netWaitDailog;
 
+    private Handler handler;
+
 
     public JoinEventDialogFragment() {
         // Required empty public constructor
@@ -67,7 +70,11 @@ public class JoinEventDialogFragment extends DialogFragment {
                 try {
 
                     dataLoad();
-                    setList();
+                    // 메시지 얻어오기
+                    Message msg = handler.obtainMessage();
+                    // 메시지 ID 설정
+                    msg.what = 1;
+                    handler.sendMessage(msg);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -86,15 +93,25 @@ public class JoinEventDialogFragment extends DialogFragment {
     }
 
     private void init(){
+        account = (Account) getArguments().getSerializable("user");
+
         netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
         netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
         netWaitDailog.setTitle("정보 받아 오는 중");
 
-        account = ((MainActivity)getActivity()).getUser();
-
         jeview = (RecyclerView) view.findViewById(R.id.Dial_joinlist_recyclerview);
         jeview.setHasFixedSize(true);
 
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (msg.what ==1){
+                    setList();
+                }
+
+                return true;
+            }
+        });
 
     }
 
@@ -119,13 +136,13 @@ public class JoinEventDialogFragment extends DialogFragment {
         JSONObject coupon_data = null;
         try {
             coupon_data = new JSONObject(res_join);
-            JSONArray jsonArray = coupon_data.getJSONArray("join");
-            for (int i=0;i<jsonArray.length();i++){
-                JSONObject obj = (JSONObject) jsonArray.get(i);
+            JSONArray jeArray = coupon_data.getJSONArray("join");
+            for (int i=0;i<jeArray.length();i++){
+                JSONObject obj = (JSONObject) jeArray.get(i);
                 JoinEventItem item = new JoinEventItem();
-                item.setETitle(((String) obj.get("ENAME")).substring(0, 10));
+                item.setETitle(((String) obj.get("ENAME")));
                 item.setEDeadline((String) obj.get("EDEADLINE").toString().substring(0, 10));
-                item.setENum(Integer.parseInt((String)obj.get("ENUM")));
+                item.setENum(Integer.parseInt(obj.get("ENUM").toString()));
                 item.setECordination((String) obj.get("ECORDINATION"));
                 item.setEProfit((String) (obj.get("ECORDINATION")+""));
                 if(Integer.parseInt(obj.get("JRESULT").toString())==1){

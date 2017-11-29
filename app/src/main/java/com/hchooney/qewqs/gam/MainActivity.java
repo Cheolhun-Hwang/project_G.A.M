@@ -212,9 +212,9 @@ public class MainActivity extends AppCompatActivity {
         JSONObject notice_data = null;
         try {
             notice_data = new JSONObject(res_notice);
-            JSONArray jsonArray = notice_data.getJSONArray("notice");
-            for (int i=0;i<jsonArray.length();i++){
-                JSONObject obj = (JSONObject) jsonArray.get(i);
+            JSONArray noticeArray = notice_data.getJSONArray("notice");
+            for (int i=0;i<noticeArray.length();i++){
+                JSONObject obj = (JSONObject) noticeArray.get(i);
                 NotifyItem item = new NotifyItem();
                 item.setDate(((String) obj.get("NMODIFY")).substring(0, 10));
                 item.setTItle((String) obj.get("NTITLE"));
@@ -232,12 +232,38 @@ public class MainActivity extends AppCompatActivity {
         //guide
         //temp
         guidelist = new ArrayList<GuideItem>();
-        guidelist.add(new GuideItem(1, "임시 장소 이름", 127.128876, 37.455127, "None", "None", "2017-00-00 00:00"));
+        /*guidelist.add(new GuideItem(1, "임시 장소 이름", 127.128876, 37.455127, "None", "None", "2017-00-00 00:00"));
         guidelist.add(new GuideItem(2, "임시 장소 이름", 127.128876, 37.459136, "None", "None", "2017-00-00 00:00"));
         guidelist.add(new GuideItem(3, "임시 장소 이름", 127.128876, 37.457115, "None", "None", "2017-00-00 00:00"));
         guidelist.add(new GuideItem(4, "임시 장소 이름", 127.128876, 37.461104, "None", "None", "2017-00-00 00:00"));
         guidelist.add(new GuideItem(5, "임시 장소 이름", 127.128876, 37.471153, "None", "None", "2017-00-00 00:00"));
-        guidelist.add(new GuideItem(6, "임시 장소 이름", 127.128876, 37.450162, "None", "None", "2017-00-00 00:00"));
+        guidelist.add(new GuideItem(6, "임시 장소 이름", 127.128876, 37.450162, "None", "None", "2017-00-00 00:00"));*/
+
+        String res_guide = new SendGet("search/guide", ("?dist=2&gpsx=1&gpsy=1")).SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_guide);
+
+        JSONObject guide_data = null;
+        try {
+            guide_data = new JSONObject(res_guide);
+            JSONArray guideArray = guide_data.getJSONArray("guide");
+            for (int i=0;i<guideArray.length();i++){
+                JSONObject obj = (JSONObject) guideArray.get(i);
+                GuideItem item = new GuideItem();
+                item.setGid((Integer.parseInt(obj.get("GID").toString())));
+                item.setgAudio((String) obj.get("GAUDIO"));
+                item.setgImage(obj.get("GPHOTO").toString());
+                item.setgModifyDate(obj.get("GMODIFY").toString().substring(0, 10));
+                item.setGpsx(Double.parseDouble(obj.get("GGPSY").toString()));
+                item.setGpsy(Double.parseDouble(obj.get("GGPSX").toString()));
+                item.setSpot(obj.get("GWHERE").toString());
+                guidelist.add(0, item);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
 
         //event
         //temp
@@ -246,12 +272,7 @@ public class MainActivity extends AppCompatActivity {
         eventlist.add(new EventItem(2, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128874, 37.431127, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(3, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128873, 37.451247, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(4, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128872, 37.450067, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(5, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128871, 37.452517, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(6, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128870, 37.453487, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(7, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128869, 37.456607, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(8, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128868, 37.458827, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(9, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128867, 37.451920, "이벤트 당첨 혜택"));
-
+       
         //coupon
         //temp
         couponlist = new ArrayList<CouponItem>();
@@ -261,22 +282,21 @@ public class MainActivity extends AppCompatActivity {
         couponlist.add(new CouponItem(4, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
         couponlist.add(new CouponItem(5, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));*/
 
-        String res_coupon = new SendGet("set/joinlist", ("?uid="+user.getUid())).SendGet();
+        String res_coupon = new SendGet("coupon/list", ("?uid="+user.getUid())).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_coupon);
 
         JSONObject coupon_data = null;
         try {
-            coupon_data = new JSONObject(res_notice);
-            JSONArray jsonArray = coupon_data.getJSONArray("notice");
-            for (int i=0;i<jsonArray.length();i++){
-                JSONObject obj = (JSONObject) jsonArray.get(i);
-                NotifyItem item = new NotifyItem();
-                item.setDate(((String) obj.get("NMODIFY")).substring(0, 10));
-                item.setTItle((String) obj.get("NTITLE"));
-                item.setWho((String) obj.get("ADNAME"));
-                item.setContext((String) obj.get("NCONTEXT"));
-                item.setNid((String) (obj.get("NID")+""));
-                notifylist.add(0, item);
+            coupon_data = new JSONObject(res_coupon);
+            JSONArray couponArray = coupon_data.getJSONArray("coupon");
+            for (int i=0;i<couponArray.length();i++){
+                JSONObject obj = (JSONObject) couponArray.get(i);
+                CouponItem item = new CouponItem();
+                item.setEName(((String) obj.get("ENAME")));
+                item.setCPhotourl((String) obj.get("CPHOTO"));
+                item.setEdaedlinedate(obj.get("EDEADLINE").toString().substring(0, 10));
+                item.setEProfit((String) obj.get("EPROFIT"));
+                couponlist.add(0, item);
             }
 
         } catch (JSONException e) {

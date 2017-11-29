@@ -67,7 +67,9 @@ public class SettingActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 WarningDialogFragment fragment = new WarningDialogFragment();
-
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("user", user);
+                fragment.setArguments(bundle);
                 fragment.show(getSupportFragmentManager(), "WarningDialogFragment");
             }
         });
@@ -76,6 +78,9 @@ public class SettingActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 JoinEventDialogFragment fragment = new JoinEventDialogFragment();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("user", user);
+                fragment.setArguments(bundle);
                 fragment.show(getSupportFragmentManager(), "JoinEventDialogFragment");
             }
         });

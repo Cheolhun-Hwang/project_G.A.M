@@ -1,6 +1,9 @@
 package com.hchooney.qewqs.gam;
 
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +28,7 @@ import com.hchooney.qewqs.gam.RecyclerList.DetailGuide.DetaiGuideItem;
 import com.hchooney.qewqs.gam.RecyclerList.DetailGuide.DetailGuideAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -46,6 +51,14 @@ public class DetailGuideActivity extends AppCompatActivity {
     public GoogleMap mMap;
     private SupportMapFragment supportMapFragment;
 
+    private MediaPlayer mp;
+    private boolean isprepared = false;
+    private boolean isplay = false;
+
+    private ImageButton play;
+    private ImageButton stop;
+    private SeekBar seekBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,12 +71,6 @@ public class DetailGuideActivity extends AppCompatActivity {
         ListSetup();
         SetUI();
 
-    }
-
-    @Override
-    protected void onResume() {
-        //setMarkersOnMap();
-        super.onResume();
     }
 
     private void init(){
@@ -93,6 +100,78 @@ public class DetailGuideActivity extends AppCompatActivity {
 
         ImageListView = (RecyclerView) findViewById(R.id.DetailGuide_Recyclerview);
         ImageListView.setHasFixedSize(true);
+
+        play = (ImageButton) findViewById(R.id.DetailGuide_AudioPlayAndPause);
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(isprepared){
+                    if(isplay){
+                        mp.pause();
+                        isplay = false;
+                        play.setImageResource(R.drawable.ic_play_arrow);
+                    }else{
+                        mp.start();
+                        isplay = true;
+                        play.setImageResource(R.drawable.ic_pause);
+                    }
+                }
+            }
+        });
+        stop = (ImageButton) findViewById(R.id.DetailGuide_AudioStop);
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mp.stop();
+                mp.reset();
+                if(isplay){
+                    isplay = false;
+                    play.setImageResource(R.drawable.ic_play_arrow);
+                }
+            }
+        });
+        seekBar = (SeekBar) findViewById(R.id.DetailGuide_AudioSeek);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                if(seekBar.getMax() == i){
+
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mp.pause();
+                isplay = false;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isplay = true;
+                mp.seekTo(seekBar.getProgress());
+                mp.start();
+            }
+        });
+
+        String temp[] = guideItem.getgAudio().split("/");
+        String url = temp[temp.length-1];
+
+        mp = new MediaPlayer();
+
+        try {
+            mp.setDataSource(getApplicationContext(), Uri.parse("http://203.249.127.32:64001/mobile/search/guide/audio?file="+url.replaceAll(" ", "%20")));
+            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mp.setLooping(false);
+        mp.prepareAsync();
+        mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                isprepared = true;
+            }
+        });
     }
 
     private void SetUI(){
@@ -148,5 +227,25 @@ public class DetailGuideActivity extends AppCompatActivity {
                 "일반적인 폼 형태는 내부적으로 컨트롤합니다.\n" +
                 "최대한 심플하게 구현하여 개발시간을 단축합니다.");
         detaiGuideItem.setImageList(new ArrayList<String>(Arrays.asList("image_URL_1", "image_URL_2", "image_URL_3")));
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isplay =false;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mp!=null){
+            mp.release();
+            mp=null;
+        }
     }
 }

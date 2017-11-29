@@ -4,8 +4,12 @@ package com.hchooney.qewqs.gam.Fragments;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -43,6 +47,8 @@ import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -89,10 +95,16 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private boolean iseventlayout;
 
     private MediaPlayer mp;
-    private MediaController.MediaPlayerControl mpp;
+    private boolean isprepared = false;
+    private boolean isplay = false;
+
 
     private int guid_position;
     private int event_position;
+
+    private int pausePosition;
+
+    private Handler handler;
 
     public MapFragment() {
         // Required empty public constructor
@@ -115,6 +127,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         guidelist = ((MainActivity) getActivity()).getGuidelist();
         eventlist = ((MainActivity) getActivity()).getEventlist();
         SearchDistance = 2;
+        pausePosition=0;
 
         filter = (Spinner) v.findViewById(R.id.MapSpinner_Filter);
         filterAdapter = new SpinnerAdapter01(getContext(), new ArrayList<String>(Arrays.asList("전  체", "가이드", "이벤트")));
@@ -193,9 +206,59 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         detail_guid_imageview = (ImageView) v.findViewById(R.id.map_guid_imaview);
         detail_guide_distance = (TextView) v.findViewById(R.id.map_guid_distance);
         detail_guide_audio_play = (ImageButton)v.findViewById(R.id.map_guid_AudioPlayAndPause);
+        detail_guide_audio_play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(isprepared){
+                    if(isplay){
+                        mp.pause();
+                        isplay = false;
+                        detail_guide_audio_play.setImageResource(R.drawable.ic_play_arrow);
+                    }else{
+                        mp.start();
+                        isplay = true;
+                        detail_guide_audio_play.setImageResource(R.drawable.ic_pause);
+                    }
+                }
+            }
+        });
         detail_guide_audio_stop = (ImageButton) v.findViewById(R.id.map_guid_AudioStop);
+        detail_guide_audio_stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mp.stop();
+                mp.reset();
+                if(isplay){
+                    isplay = false;
+                    detail_guide_audio_play.setImageResource(R.drawable.ic_play_arrow);
+                }
+            }
+        });
         detail_guide_audio_progress = (SeekBar) v.findViewById(R.id.map_guid_AudioSeek);
+        detail_guide_audio_progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                if(seekBar.getMax() == i){
 
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mp.pause();
+                isplay = false;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isplay = true;
+                mp.seekTo(seekBar.getProgress());
+                mp.start();
+            }
+        });
+
+
+        handler = new Handler();
 
     }
 
@@ -362,6 +425,13 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        if (mp!=null){
+            mp.stop();
+            if(isplay){
+                detail_guide_audio_play.setImageResource(R.drawable.ic_play_arrow);
+                isplay = false;
+            }
+        }
 
         Log.d("Map Marker ID", "Marker ID Test : "+marker.getId()+ " / marker Title : " + marker.getTitle());
 
@@ -391,12 +461,59 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void setGuideLayout(){
+
         GuideItem item = guidelist.get(guid_position);
+        detail_guid_title.setText(item.getSpot());
+
+        String temp[] = item.getgAudio().split("/");
+        String url = temp[temp.length-1];
+
+
+        mp = new MediaPlayer();
+        try {
+            mp.setDataSource(getContext(), Uri.parse("http://203.249.127.32:64001/mobile/search/guide/audio?file="+url.replaceAll(" ", "%20")));
+            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mp.setLooping(false);
+        mp.prepareAsync();
+        mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                isprepared = true;
+            }
+        });
+
+
     }
 
     private void setEventLayout(){
         EventItem item = eventlist.get(event_position);
     }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isplay =false;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mp!=null){
+            mp.release();
+            mp=null;
+        }
+    }
+
+
 
 
 }
