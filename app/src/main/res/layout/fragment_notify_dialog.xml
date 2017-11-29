@@ -1,18 +1,18 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context="com.hchooney.qewqs.gam.Dialog.NotifyDialogFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="20dp"
-        android:background="@drawable/rountd_dialog"
-        android:minWidth="300dp"
-        android:minHeight="400dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@drawable/rountd_dialog"
+        android:minHeight="300dp"
+        android:minWidth="300dp"
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -20,46 +20,50 @@
             android:layout_marginTop="15dp"
             android:text="공지사항"
             android:textColor="@color/black"
-            android:textSize="25dp"
+            android:textSize="20dp"
             android:textStyle="bold" />
 
         <LinearLayout
-            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
             android:layout_weight="10"
             android:background="@color/white"
-            android:padding="10dp"
-            android:layout_marginTop="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TextView
-                android:textSize="16dp"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:gravity="center"
-                android:id="@+id/notify_title"
-                android:text="Notify TItle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+            android:orientation="vertical"
+            android:padding="10dp">
 
             <TextView
+                android:layout_marginBottom="8dp"
+                android:id="@+id/notify_dial_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Notify TItle"
+                android:textColor="@color/black"
+                android:textSize="16dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_marginBottom="8dp"
+                android:id="@+id/notify_dial_date_writer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:gravity="right"
-                android:textStyle="italic"
+                android:text="2017.00.00 00:00 작성자:000"
                 android:textColor="@color/black"
                 android:textSize="8dp"
-                android:id="@+id/notify_date_writer"
-                android:text="2017.00.00 00:00 작성자:000"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:textStyle="italic" />
 
             <TextView
-                android:padding="7dp"
-                android:textSize="12dp"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:id="@+id/notify_context"
-                android:text="context\n공지사항 내용"
+                android:layout_marginBottom="8dp"
+                android:id="@+id/notify_dial_context"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:padding="7dp"
+                android:text="context\n공지사항 내용"
+                android:textColor="@color/black"
+                android:textSize="12dp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
@@ -70,7 +74,7 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/notify_completeBTN"
+                android:id="@+id/notify_dial_completeBTN"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/alpha"

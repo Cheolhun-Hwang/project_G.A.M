@@ -1,10 +1,12 @@
 package com.hchooney.qewqs.gam.RecyclerList.Notify;
 
+import java.io.Serializable;
+
 /**
  * Created by qewqs on 2017-11-21.
  */
 
-public class NotifyItem {
+public class NotifyItem implements Serializable{
     private String Nid;
     private String TItle;
     private String Date;

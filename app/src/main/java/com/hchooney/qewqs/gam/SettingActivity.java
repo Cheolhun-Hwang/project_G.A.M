@@ -11,6 +11,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hchooney.qewqs.gam.Database.Account;
+import com.hchooney.qewqs.gam.Dialog.JoinEventDialogFragment;
+import com.hchooney.qewqs.gam.Dialog.WarningDialogFragment;
+import com.hchooney.qewqs.gam.Dialog.items.WarningItem;
+
+import java.util.ArrayList;
 
 public class SettingActivity extends AppCompatActivity {
     private final String TAG = "SettingActivity";
@@ -61,14 +66,17 @@ public class SettingActivity extends AppCompatActivity {
         Warning.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                WarningDialogFragment fragment = new WarningDialogFragment();
 
+                fragment.show(getSupportFragmentManager(), "WarningDialogFragment");
             }
         });
         EventJoinList = (Button) findViewById(R.id.Setting_EventJoinList);
         EventJoinList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                JoinEventDialogFragment fragment = new JoinEventDialogFragment();
+                fragment.show(getSupportFragmentManager(), "JoinEventDialogFragment");
             }
         });
 

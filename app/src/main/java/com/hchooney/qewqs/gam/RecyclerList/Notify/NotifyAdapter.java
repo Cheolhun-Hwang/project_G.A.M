@@ -1,6 +1,8 @@
 package com.hchooney.qewqs.gam.RecyclerList.Notify;
 
 import android.content.Context;
+import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import com.hchooney.qewqs.gam.Dialog.NotifyDialogFragment;
 import com.hchooney.qewqs.gam.R;
 
 import java.util.ArrayList;
@@ -19,13 +22,15 @@ import java.util.ArrayList;
 public class NotifyAdapter extends RecyclerView.Adapter{
     private ArrayList<NotifyItem> list;
     private Context context;
+    private FragmentManager manager;
 
     // Allows to remember the last item shown on screen
     private int lastPosition = -1;
 
-    public NotifyAdapter(ArrayList<NotifyItem> list, Context context) {
+    public NotifyAdapter(ArrayList<NotifyItem> list, Context context, FragmentManager m) {
         this.list = list;
         this.context = context;
+        this.manager = m;
     }
 
     @Override
@@ -37,13 +42,25 @@ public class NotifyAdapter extends RecyclerView.Adapter{
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         NotifyHolder hold = (NotifyHolder) holder;
         hold.Nid.setText(list.get(position).getNid());
         hold.NTitle.setText(list.get(position).getTItle());
         hold.NDate.setText(list.get(position).getDate());
 
         setAnimation(hold.itemView, position);
+
+        hold.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("item", list.get(position));
+                NotifyDialogFragment fragment = new NotifyDialogFragment();
+                fragment.setArguments(bundle);
+
+                fragment.show(manager, "CouponDialogFragment");
+            }
+        });
     }
 
     @Override

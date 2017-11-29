@@ -24,6 +24,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.hchooney.qewqs.gam.Database.Account;
+import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
+import com.hchooney.qewqs.gam.Net.SendGet;
+import com.hchooney.qewqs.gam.Net.SendPost;
 
 public class LoginActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_SIGN_IN = 9001;
@@ -33,8 +36,11 @@ public class LoginActivity extends AppCompatActivity {
 
     private Thread Loading;
     private Handler handler;
+    private Account account;
 
     private GoogleApiClient mGoogleApiClient;
+
+    private netWaitDailog netWaitDailog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +82,9 @@ public class LoginActivity extends AppCompatActivity {
         Log.e(TAG, "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
             GoogleSignInAccount acct= result.getSignInAccount();
-            Account account = new Account();
+            account = new Account();
             account.setUid(acct.getId());
+            Log.d(TAG, "My UID : " + acct.getId());
             account.setUemail(acct.getEmail());
             account.setUname(acct.getDisplayName());
             account.setUnickname(acct.getDisplayName());
@@ -85,8 +92,32 @@ public class LoginActivity extends AppCompatActivity {
             MainActivity.setUser(account);
             MainActivity.setmGoogleApiClient(this.mGoogleApiClient);
 
-            startActivity(new Intent(getApplicationContext(), MainActivity.class));
-            finish();
+            netWaitDailog.show(getSupportFragmentManager(), "Net Dailog");
+
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        String recieve = new SendGet("login/checkuid", "?uid="+account.getUid()).SendGet().replaceAll(" ", "");
+                        Log.d("Login Activity", recieve);
+
+                        // 메시지 얻어오기
+                        Message msg = handler.obtainMessage();
+
+                        // 메시지 ID 설정
+                        msg.what = 3;
+                        msg.obj = recieve;
+                        handler.sendMessage(msg);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    netWaitDailog.dismiss();
+                }
+            });
+
+            t.start();
+
         } else {
             // Signed out, show unauthenticated UI.
             //updateUI(false);
@@ -129,6 +160,10 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
+        netWaitDailog.setTitle("로그인");
+        netWaitDailog.setMessage("로그인 정보를 확인하고 있습니다");
+
         Loading = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -155,6 +190,45 @@ public class LoginActivity extends AppCompatActivity {
                     translateAnim(LogoImage.getX(), LogoImage.getX(), LogoImage.getY(), (float) ( LogoImage.getY()-0.8), 8000, LogoImage);
                 }else if(msg.what == 2){
                     googleSign.setVisibility(View.VISIBLE);
+                }else if(msg.what == 3){
+                    String resString = (String)msg.obj;
+                    int parseint = Integer.parseInt(resString.replace("\n", ""));
+
+                    Log.d("Handler", "Recieve : " + parseint);
+                    if(parseint == 1){
+                        Log.d("Handler", "equals True");
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }else if(parseint == 0){
+                        Toast.makeText(getApplicationContext(), "현 계정은 제재 대상입니다\n더 이상 서비스를 이용하실 수 없습니다]\n관련사항은 문의주시기 바랍니다", Toast.LENGTH_LONG).show();
+                    }else if(parseint == 2){
+
+                        netWaitDailog.setTitle("계정 정보 생성");
+                        netWaitDailog.setMessage("첫 로그인으로 인한 계정 정보 생성 중 입니다");
+                        netWaitDailog.show(getSupportFragmentManager(), "Net Dailog");
+                        Thread t = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    new SendPost("login/create", "?uid="+"0001"+"&uname="+account.getUname()+"&uemail="+account.getUemail()).SendPost();
+
+
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
+                                netWaitDailog.dismiss();
+                            }
+                        });
+
+                        t.start();
+
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
                 }
                 return true;
             }

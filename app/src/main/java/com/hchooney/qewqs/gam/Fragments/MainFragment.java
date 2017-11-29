@@ -67,7 +67,7 @@ public class MainFragment extends Fragment {
 
     private void ListSetup(){
         notify.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-        notify.setAdapter(new NotifyAdapter(notifylist, getContext()));
+        notify.setAdapter(new NotifyAdapter(notifylist, getContext(), getActivity().getSupportFragmentManager()));
 
         guide.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         guide.setAdapter(new GuideAdapter(guidelist, getContext()));
