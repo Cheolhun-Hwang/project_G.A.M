@@ -1,6 +1,8 @@
 package com.hchooney.qewqs.gam;
 
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInApi;
@@ -20,12 +23,17 @@ import com.hchooney.qewqs.gam.Dialog.CouponDialogFragment;
 import com.hchooney.qewqs.gam.Dialog.RecyclerList.CouponItem;
 import com.hchooney.qewqs.gam.Fragments.MainFragment;
 import com.hchooney.qewqs.gam.Fragments.MapFragment;
+import com.hchooney.qewqs.gam.Net.SendGet;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
 import com.hchooney.qewqs.gam.RecyclerList.Notify.NotifyAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.Notify.NotifyItem;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -47,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     public static void setUser(Account u) {
         user = u;
     }
+    public static Account getUser(){return user;}
     public static void setmGoogleApiClient(GoogleApiClient mGoogleApiClient) {
         MainActivity.mGoogleApiClient = mGoogleApiClient;
     }
@@ -81,13 +90,41 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean ishomeandmap; //true : home, false : map
 
+    private netWaitDailog netWaitDailog;
+
+    private Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         init();
-        SetData();
+
+        netWaitDailog.show(getSupportFragmentManager(), "Net Dailog");
+
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    SetData();
+
+                    // 메시지 얻어오기
+                    Message msg = handler.obtainMessage();
+                    // 메시지 ID 설정
+                    msg.what = 1;
+                    handler.sendMessage(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                netWaitDailog.dismiss();
+            }
+        });
+
+        t.start();
+
 
 
         Toast.makeText(getApplicationContext(), "환영합니다. "+ user.getUname()+"!!", Toast.LENGTH_SHORT).show();
@@ -95,13 +132,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init(){
+        netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
+        netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
+        netWaitDailog.setTitle("정보 받아 오는 중");
+
         if(user == null){
             user = new Account();
         }
         SearchDistance = 2;
         ishomeandmap = false;
-        manager = getSupportFragmentManager();
-        manager.beginTransaction().replace(R.id.Main_container, new MainFragment()).commit();
 
         Map = (ImageButton) findViewById(R.id.MainMapBTN);
         Map.setOnClickListener(new View.OnClickListener() {
@@ -144,17 +183,51 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if(msg.what == 1){
+                    manager = getSupportFragmentManager();
+                    manager.beginTransaction().replace(R.id.Main_container, new MainFragment()).commit();
+                }
+                return true;
+            }
+        });
+
     }
 
     private void SetData(){
         //notify
         //temp
         notifylist = new ArrayList<NotifyItem>();
-        notifylist.add(new NotifyItem("0001", "공지사항 제목 1", "2017-00-00 00:00", "공지사항 1의 공지내용입니다.", "관리자"));
+        /*notifylist.add(new NotifyItem("0001", "공지사항 제목 1", "2017-00-00 00:00", "공지사항 1의 공지내용입니다.", "관리자"));
         notifylist.add(new NotifyItem("0002", "공지사항 제목 2", "2017-00-00 00:00", "공지사항 2의 공지내용입니다.", "관리자"));
         notifylist.add(new NotifyItem("0003", "공지사항 제목 3", "2017-00-00 00:00", "공지사항 3의 공지내용입니다.", "관리자"));
         notifylist.add(new NotifyItem("0004", "공지사항 제목 4", "2017-00-00 00:00", "공지사항 4의 공지내용입니다.", "관리자"));
-        notifylist.add(new NotifyItem("0005", "공지사항 제목 5", "2017-00-00 00:00", "공지사항 5의 공지내용입니다.", "관리자"));
+        notifylist.add(new NotifyItem("0005", "공지사항 제목 5", "2017-00-00 00:00", "공지사항 5의 공지내용입니다.", "관리자"));*/
+
+        String res_notice = new SendGet("notice/list", "").SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_notice);
+
+        JSONObject notice_data = null;
+        try {
+            notice_data = new JSONObject(res_notice);
+            JSONArray jsonArray = notice_data.getJSONArray("notice");
+            for (int i=0;i<jsonArray.length();i++){
+                JSONObject obj = (JSONObject) jsonArray.get(i);
+                NotifyItem item = new NotifyItem();
+                item.setDate(((String) obj.get("NMODIFY")).substring(0, 10));
+                item.setTItle((String) obj.get("NTITLE"));
+                item.setWho((String) obj.get("ADNAME"));
+                item.setContext((String) obj.get("NCONTEXT"));
+                item.setNid((String) (obj.get("NID")+""));
+                notifylist.add(0, item);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
         //guide
         //temp
@@ -182,11 +255,35 @@ public class MainActivity extends AppCompatActivity {
         //coupon
         //temp
         couponlist = new ArrayList<CouponItem>();
-        couponlist.add(new CouponItem(1, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
+        /*couponlist.add(new CouponItem(1, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
         couponlist.add(new CouponItem(2, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
         couponlist.add(new CouponItem(3, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
         couponlist.add(new CouponItem(4, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
-        couponlist.add(new CouponItem(5, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
+        couponlist.add(new CouponItem(5, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));*/
+
+        String res_coupon = new SendGet("set/joinlist", ("?uid="+user.getUid())).SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_coupon);
+
+        JSONObject coupon_data = null;
+        try {
+            coupon_data = new JSONObject(res_notice);
+            JSONArray jsonArray = coupon_data.getJSONArray("notice");
+            for (int i=0;i<jsonArray.length();i++){
+                JSONObject obj = (JSONObject) jsonArray.get(i);
+                NotifyItem item = new NotifyItem();
+                item.setDate(((String) obj.get("NMODIFY")).substring(0, 10));
+                item.setTItle((String) obj.get("NTITLE"));
+                item.setWho((String) obj.get("ADNAME"));
+                item.setContext((String) obj.get("NCONTEXT"));
+                item.setNid((String) (obj.get("NID")+""));
+                notifylist.add(0, item);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     @Override
