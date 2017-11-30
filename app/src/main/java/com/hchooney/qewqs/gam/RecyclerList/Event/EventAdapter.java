@@ -14,6 +14,7 @@ import com.hchooney.qewqs.gam.DetailEventActivity;
 import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideHolder;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -47,6 +48,10 @@ public class EventAdapter extends RecyclerView.Adapter {
         hold.EName.setText(list.get(position).geteName());
         hold.ELimit.setText("~ " + list.get(position).geteLimitDate());
         //hold.EImage.setImageBitmap();
+
+        Log.d("EVENT URL", "http://203.249.127.32:64001/mobile/search/event/images?spot="+list.get(position).geteSpot());
+        Picasso.with(context).load("http://203.249.127.32:64001/mobile/search/event/images?eid="+list.get(position).getEid()).into(hold.EImage);
+
 
         hold.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

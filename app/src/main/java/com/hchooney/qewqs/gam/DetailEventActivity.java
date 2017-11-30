@@ -9,12 +9,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hchooney.qewqs.gam.RecyclerList.DetailEvent.DetailEventAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.DetailEvent.DetailEventItem;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +32,7 @@ public class DetailEventActivity extends AppCompatActivity {
     private TextView ELimitDate;
     private TextView ENum;
     private ImageButton JoinEvent;
+    private ImageView spotImage;
     private RecyclerView joinListView;
 
     //리소스
@@ -73,6 +76,10 @@ public class DetailEventActivity extends AppCompatActivity {
         });
         joinListView = (RecyclerView) findViewById(R.id.DetailEvent_showUpListView);
         joinListView.setHasFixedSize(true);
+
+        spotImage = (ImageView) findViewById(R.id.DetailEvent_spotImage);
+        Picasso.with(getApplicationContext()).load("http://203.249.127.32:64001/mobile/search/event/images?eid="+eventItem.getEid()).into(spotImage);
+
 
         Back = (ImageButton) findViewById(R.id.DetailEvent_arrowBack);
         Back.setOnClickListener(new View.OnClickListener() {

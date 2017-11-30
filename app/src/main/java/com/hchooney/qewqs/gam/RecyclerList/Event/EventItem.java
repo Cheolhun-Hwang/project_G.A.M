@@ -16,6 +16,7 @@ public class EventItem implements Serializable {
     private double eGpsx;
     private double eGpsy;
     private String eProfit;
+    private String ePhoto;
 
     public EventItem() {
         this.eid = 0;
@@ -27,11 +28,12 @@ public class EventItem implements Serializable {
         this.eGpsx = 0.0;
         this.eGpsy = 0.0;
         this.eProfit = "";
+        this.ePhoto="";
     }
 
     public EventItem(int eid, String eName, String eLimitDate,
                      String eCordination, String eSpot, int eNum,
-                     double eGpsx, double eGpsy, String eProfit) {
+                     double eGpsx, double eGpsy, String eProfit, String ePhoto) {
         this.eid = eid;
         this.eName = eName;
         this.eLimitDate = eLimitDate;
@@ -41,6 +43,7 @@ public class EventItem implements Serializable {
         this.eGpsx = eGpsx;
         this.eGpsy = eGpsy;
         this.eProfit = eProfit;
+        this.ePhoto = ePhoto;
     }
 
     public int getEid() {
@@ -113,5 +116,13 @@ public class EventItem implements Serializable {
 
     public void seteProfit(String eProfit) {
         this.eProfit = eProfit;
+    }
+
+    public String getePhoto() {
+        return ePhoto;
+    }
+
+    public void setePhoto(String ePhoto) {
+        this.ePhoto = ePhoto;
     }
 }

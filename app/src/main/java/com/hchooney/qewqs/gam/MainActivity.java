@@ -268,11 +268,38 @@ public class MainActivity extends AppCompatActivity {
         //event
         //temp
         eventlist = new ArrayList<EventItem>();
-        eventlist.add(new EventItem(1, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128875, 37.452197, "이벤트 당첨 혜택"));
+        /*eventlist.add(new EventItem(1, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128875, 37.452197, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(2, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128874, 37.431127, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(3, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128873, 37.451247, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(4, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128872, 37.450067, "이벤트 당첨 혜택"));
-       
+        eventlist.add(new EventItem(4, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128872, 37.450067, "이벤트 당첨 혜택"));*/
+        String res_event = new SendGet("search/event", ("?dist=2&gpsx=1&gpsy=1")).SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_event);
+
+        JSONObject event_data = null;
+        try {
+            event_data = new JSONObject(res_event);
+            JSONArray eventArray = event_data.getJSONArray("events");
+            for (int i=0;i<eventArray.length();i++){
+                JSONObject obj = (JSONObject) eventArray.get(i);
+                EventItem item = new EventItem();
+                item.setEid(Integer.parseInt(obj.get("EID").toString()));
+                item.seteName(((String) obj.get("ENAME")));
+                item.seteProfit((String) obj.get("EPROFIT"));
+                item.seteLimitDate(obj.get("EDEADLINE").toString().substring(0, 10));
+                item.seteCordination((String) obj.get("ECORDI"));
+                item.seteGpsx(Double.parseDouble(obj.get("EGPSY").toString()));
+                item.seteGpsy(Double.parseDouble(obj.get("EGPSX").toString()));
+                item.seteNum(Integer.parseInt(obj.get("ENUM").toString()));
+                item.setePhoto(obj.get("GPHOTO").toString());
+                item.seteSpot(obj.get("EWHERE").toString());
+                eventlist.add(0, item);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
         //coupon
         //temp
         couponlist = new ArrayList<CouponItem>();
