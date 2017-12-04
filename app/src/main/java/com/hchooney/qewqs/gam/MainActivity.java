@@ -1,6 +1,10 @@
 package com.hchooney.qewqs.gam;
 
+import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentManager;
@@ -39,6 +43,11 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private final static int SIG_LOGOUT = 4004;
+
+    private boolean isGPS;
+    private Location nowLocation;
+    private GPSListener gpsListener;
+    private LocationManager gmanager;
 
     private final static String TAG = "MainActivity";
     private static Account user;
@@ -82,6 +91,12 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setCouponlist(ArrayList<CouponItem> couponlist) {
         MainActivity.couponlist = couponlist;
+    }
+    public boolean isGPS() {
+        return isGPS;
+    }
+    public void setGPS(boolean GPS) {
+        isGPS = GPS;
     }
 
     private ImageButton Map;
@@ -131,7 +146,25 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "USER ID : " + user.getUid() +"\nUSER NAME : " + user.getUname() + "\nUSER EMAIL : " + user.getUemail());
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
     private void init(){
+        isGPS = true;
+
+        if(isGPS){
+            startLocationService();
+        }else{
+            Log.d("GPS", "GPS END");
+            gpsListener = null;
+        }
+
+        nowLocation = null;
+        gpsListener = null;
+
+
         netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
         netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
         netWaitDailog.setTitle("정보 받아 오는 중");
@@ -179,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
                 intent.putExtra("user", user);
+                intent.putExtra("gps", isGPS);
                 startActivityForResult(intent, SIG_LOGOUT);
             }
         });
@@ -239,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
         guidelist.add(new GuideItem(5, "임시 장소 이름", 127.128876, 37.471153, "None", "None", "2017-00-00 00:00"));
         guidelist.add(new GuideItem(6, "임시 장소 이름", 127.128876, 37.450162, "None", "None", "2017-00-00 00:00"));*/
 
-        String res_guide = new SendGet("search/guide", ("?dist=2&gpsx=1&gpsy=1")).SendGet();
+        String res_guide = new SendGet("search/guide", ("?dist=1&gpsx=127.127163&gpsy=37.450881")).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_guide);
 
         JSONObject guide_data = null;
@@ -272,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
         eventlist.add(new EventItem(2, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128874, 37.431127, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(3, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128873, 37.451247, "이벤트 당첨 혜택"));
         eventlist.add(new EventItem(4, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128872, 37.450067, "이벤트 당첨 혜택"));*/
-        String res_event = new SendGet("search/event", ("?dist=2&gpsx=1&gpsy=1")).SendGet();
+        String res_event = new SendGet("search/event", ("?dist=1&gpsx=127.127163&gpsy=37.450881")).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_event);
 
         JSONObject event_data = null;
@@ -333,6 +367,72 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // 위치 정보 확인을 위해 정의한 메소드(위치 정보 갱신)
+    private void startLocationService() {
+        // 위치 관리자 객체 참조
+        gmanager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        // 위치 정보를 받을 위치 리스너 객체 생성
+        gpsListener = new GPSListener();
+        long minTime = 5000;//GPS정보 전달 시간 지정 - 5초마다 위치정보 전달
+        float minDistance = 0;//이동거리 지정
+
+        //위치정보는 위치 프로바이더(Location Provider)를 통해 얻는다
+        try {
+            // GPS를 이용한 위치 요청
+            gmanager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,//위치 확인 방법
+                    minTime,//GPS 정보 전달 시간- 위치 정보 갱신 시간 설정
+                    minDistance,//위치 정보 갱신을 위한 이동거리
+                    gpsListener);//위치 정보가 갱신되는 시점에 호출될 리스너 등록 - 위치 정보 전달
+
+            // 네트워크(기지국)를 이용한 위치 요청
+            gmanager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    minTime,
+                    minDistance,
+                    gpsListener);
+
+            // 위치 확인이 안되는 경우에도 최근에 확인된 위치 정보 먼저 확인
+            Location lastLocation = gmanager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastLocation != null) {
+                Double latitude = lastLocation.getLatitude();
+                Double longitude = lastLocation.getLongitude();
+                Toast.makeText(getApplicationContext(), "Last Known Location : " + "Latitude : "
+                        + latitude + "\nLongitude:" + longitude, Toast.LENGTH_LONG).show();
+            }
+        } catch(SecurityException ex) {
+            ex.printStackTrace();
+        }
+        Toast.makeText(getApplicationContext(), "위치 확인이 시작되었습니다.", Toast.LENGTH_SHORT).show();
+    }
+
+    // 위치 리스너 클래스 정의
+    private class GPSListener implements LocationListener {
+        //위치 정보가 확인(수신)될 때마다 자동 호출되는 메소드
+        @Override
+        public void onLocationChanged(Location location) {
+            nowLocation = location;
+            Double latitude = location.getLatitude();//위도
+            Double longitude = location.getLongitude();//경도
+
+            String msg = "Latitude : "+ latitude + "\nLongitude:"+ longitude;
+
+            Log.i("GPSListener", msg);
+
+            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -341,11 +441,19 @@ public class MainActivity extends AppCompatActivity {
             if(resultCode == RESULT_OK){
                 if(mGoogleApiClient.isConnected()){
                     signout();
-
-
                 }
                 startActivity(new Intent(getApplicationContext(), LoginActivity.class));
                 finish();
+            }else if(resultCode == 2002){
+                isGPS = data.getBooleanExtra("gps", false);
+                Log.d("isGPS", "GPS : " + isGPS );
+
+                if(isGPS){
+                    startLocationService();
+                }else{
+                    Log.d("GPS", "GPS END");
+
+                }
             }
         }
     }

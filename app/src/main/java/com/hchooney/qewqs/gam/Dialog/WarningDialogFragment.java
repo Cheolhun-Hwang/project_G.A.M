@@ -38,8 +38,7 @@ public class WarningDialogFragment extends DialogFragment {
     private ArrayList<WarningItem> list;
     private RecyclerView warningview;
 
-    private Handler handler;
-    private netWaitDailog netWaitDailog;
+
 
     private Account account;
 
@@ -59,91 +58,28 @@ public class WarningDialogFragment extends DialogFragment {
 
         init();
 
-        netWaitDailog.show(getActivity().getSupportFragmentManager(), "Net Dailog");
+        setList();
 
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
 
-                    dataLoad();
-                    // 메시지 얻어오기
-                    Message msg = handler.obtainMessage();
-                    // 메시지 ID 설정
-                    msg.what = 1;
-                    handler.sendMessage(msg);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                netWaitDailog.dismiss();
-            }
-        });
-
-        t.start();
 
         return dialog;
     }
 
     private void init(){
         account = (Account) getArguments().getSerializable("user");
-
-        netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
-        netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
-        netWaitDailog.setTitle("정보 받아 오는 중");
-
+        list =  getArguments().getParcelableArrayList("list");
 
         warningview = (RecyclerView) view.findViewById(R.id.dialog_warning_recyclerview);
         warningview.setHasFixedSize(true);
 
 
 
-        handler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                if (msg.what ==1){
-                    setList();
-                }
 
-                return true;
-            }
-        });
     }
 
     private void setList(){
         warningview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         warningview.setAdapter(new WarningAdapter(list, getContext()));
-    }
-
-    private void dataLoad(){
-        list = new ArrayList<WarningItem>();
-
-        //임시
-        /*list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));*/
-        String res_warning = new SendGet("set/warning", ("?uid="+account.getUid())).SendGet();
-        Log.d("Res NOTICE", "RESULT : " + res_warning);
-
-        JSONObject warning_data = null;
-        try {
-            warning_data = new JSONObject(res_warning);
-            JSONArray warningArray = warning_data.getJSONArray("warning");
-            for (int i=0;i<warningArray.length();i++){
-                JSONObject obj = (JSONObject) warningArray.get(i);
-                WarningItem item = new WarningItem();
-                item.setWWhy(((String) obj.get("WWHY")));
-                item.setWWhen((String) obj.get("WWHEN").toString().substring(0, 10));
-                list.add(0, item);
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
     }
 
 }

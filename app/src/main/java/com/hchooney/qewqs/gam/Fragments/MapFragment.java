@@ -46,6 +46,7 @@ import com.hchooney.qewqs.gam.MainActivity;
 import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.net.URI;
@@ -70,7 +71,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private SpinnerAdapter01 distanceAdapter;
 
     private String beforeFilter;
-    private int SearchDistance;
+    private String SearchDistance;
 
     private LinearLayout detail_guid_layout;
     private LinearLayout detail_event_layout;
@@ -126,14 +127,14 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private void init() {
         guidelist = ((MainActivity) getActivity()).getGuidelist();
         eventlist = ((MainActivity) getActivity()).getEventlist();
-        SearchDistance = 2;
+        SearchDistance = "1";
         pausePosition=0;
 
         filter = (Spinner) v.findViewById(R.id.MapSpinner_Filter);
         filterAdapter = new SpinnerAdapter01(getContext(), new ArrayList<String>(Arrays.asList("전  체", "가이드", "이벤트")));
         filter.setAdapter(filterAdapter);
         distance = (Spinner) v.findViewById(R.id.MapSpinner_Distance);
-        distanceAdapter = new SpinnerAdapter01(getContext(), new ArrayList<>(Arrays.asList("2 km", "5 km", "10 km", "20 km")));
+        distanceAdapter = new SpinnerAdapter01(getContext(), new ArrayList<>(Arrays.asList("1 km", "2.5 km", "5 km")));
         distance.setAdapter(distanceAdapter);
 
         beforeFilter = filter.getSelectedItem().toString();
@@ -281,7 +282,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Log.d("Map Filter", "이전 : " + SearchDistance + " / 선택된 값 : " + distance.getSelectedItem());
-                SearchDistance = Integer.parseInt(distance.getSelectedItem().toString().replace(" km", ""));
+                SearchDistance = distance.getSelectedItem().toString().replace(" km", "");
                 loadList(SearchDistance);
 
 
@@ -295,7 +296,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     }
 
-    private void loadList(int Search){
+    private void loadList(String Search){
         Toast.makeText(getContext(), "다음 반경으로 서버와 통신합니다.\n반경 : " + SearchDistance, Toast.LENGTH_LONG).show();
     }
 
@@ -468,6 +469,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         String temp[] = item.getgAudio().split("/");
         String url = temp[temp.length-1];
 
+        Picasso.with(getContext()).load("http://203.249.127.32:64001/mobile/search/guide/images?gid="+item.getGid()).into(detail_guid_imageview);
 
         mp = new MediaPlayer();
         try {
@@ -490,6 +492,15 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     private void setEventLayout(){
         EventItem item = eventlist.get(event_position);
+
+        detail_event_num.setText("인원 : " + item.geteNum());
+        detail_event_deadline.setText("기간 : ~ "+item.geteLimitDate());
+        detail_event_cordination.setText("조건 : " + item.geteCordination());
+        detail_event_profit.setText("혜택 : " + item.geteProfit());
+
+        Picasso.with(getContext()).load("http://203.249.127.32:64001/mobile/search/event/images?eid="+item.getEid()).into(detail_event_imageview);
+
+
     }
 
 

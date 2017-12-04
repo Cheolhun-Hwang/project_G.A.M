@@ -28,6 +28,8 @@ import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
 import com.hchooney.qewqs.gam.Net.SendGet;
 import com.hchooney.qewqs.gam.Net.SendPost;
 
+import org.json.JSONObject;
+
 public class LoginActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_SIGN_IN = 9001;
     private final static String TAG = "LoginActivity";
@@ -211,7 +213,12 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 try {
-                                    new SendPost("login/create", "?uid="+"0001"+"&uname="+account.getUname()+"&uemail="+account.getUemail()).SendPost();
+                                    JSONObject postDataParams = new JSONObject();
+                                    postDataParams.put("uid", "0001");
+                                    postDataParams.put("uname", account.getUname());
+                                    postDataParams.put("uemail", account.getUemail());
+                                    Log.e("params",postDataParams.toString());
+                                    new SendPost("login/create", postDataParams).SendPost();
 
 
 
