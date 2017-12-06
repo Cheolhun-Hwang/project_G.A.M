@@ -27,6 +27,7 @@ import com.hchooney.qewqs.gam.Database.Account;
 import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
 import com.hchooney.qewqs.gam.Net.SendGet;
 import com.hchooney.qewqs.gam.Net.SendPost;
+import com.hchooney.qewqs.gam.Net.SendPostReq;
 
 import org.json.JSONObject;
 
@@ -218,7 +219,7 @@ public class LoginActivity extends AppCompatActivity {
                                     postDataParams.put("uname", account.getUname());
                                     postDataParams.put("uemail", account.getUemail());
                                     Log.e("params",postDataParams.toString());
-                                    new SendPost("login/create", postDataParams).SendPost();
+                                    new SendPostReq("login/create", postDataParams).post();
 
 
 

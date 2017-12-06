@@ -153,17 +153,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void init(){
         isGPS = true;
+        nowLocation = null;
+        gpsListener = null;
 
         if(isGPS){
             startLocationService();
         }else{
             Log.d("GPS", "GPS END");
-            gpsListener = null;
         }
-
-        nowLocation = null;
-        gpsListener = null;
-
 
         netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
         netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
@@ -452,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
                     startLocationService();
                 }else{
                     Log.d("GPS", "GPS END");
-
+                    gmanager.removeUpdates(gpsListener);
                 }
             }
         }
