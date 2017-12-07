@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.hchooney.qewqs.gam.Database.Account;
 import com.hchooney.qewqs.gam.Dialog.JoinEventDialogFragment;
+import com.hchooney.qewqs.gam.Dialog.ModifyNickFragment;
 import com.hchooney.qewqs.gam.Dialog.WarningDialogFragment;
 import com.hchooney.qewqs.gam.Dialog.items.WarningItem;
 import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
@@ -114,16 +115,21 @@ public class SettingActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent();
                 intent.putExtra("gps", isGPS);
+                intent.putExtra("user", user);
                 setResult(2002, intent);
                 finish();
             }
         });
         ChangShowNickName = (TextView) findViewById(R.id.Setting_Nickname_show);
-        ChangNickName = (Button) findViewById(R.id.Setting_Nickname_change);
+        ChangNickName = (Button) findViewById(R.id.Setting_Nickname_changeBTN);
         ChangNickName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                ModifyNickFragment fragment = new ModifyNickFragment();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("user", user);
+                fragment.setArguments(bundle);
+                fragment.show(getSupportFragmentManager(), "ModifyNickFragment");
             }
         });
         Warning = (TextView) findViewById(R.id.Setting_Warning);
@@ -207,5 +213,10 @@ public class SettingActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+    }
+
+    public void changeNickname(String nic){
+        user.setUnickname(nic);
+        ChangShowNickName.setText(nic);
     }
 }

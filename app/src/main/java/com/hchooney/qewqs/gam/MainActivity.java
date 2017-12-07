@@ -2,6 +2,8 @@ package com.hchooney.qewqs.gam;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -28,6 +30,7 @@ import com.hchooney.qewqs.gam.Dialog.RecyclerList.CouponItem;
 import com.hchooney.qewqs.gam.Fragments.MainFragment;
 import com.hchooney.qewqs.gam.Fragments.MapFragment;
 import com.hchooney.qewqs.gam.Net.SendGet;
+import com.hchooney.qewqs.gam.Net.SendPostReq;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideAdapter;
@@ -39,13 +42,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private final static int SIG_LOGOUT = 4004;
 
     private boolean isGPS;
     private Location nowLocation;
+    private String nowSpot;
     private GPSListener gpsListener;
     private LocationManager gmanager;
 
@@ -99,6 +108,10 @@ public class MainActivity extends AppCompatActivity {
         isGPS = GPS;
     }
 
+    public Location getNowLocation() {
+        return nowLocation;
+    }
+
     private ImageButton Map;
     private ImageButton Gift;
     private ImageButton Setting;
@@ -108,6 +121,20 @@ public class MainActivity extends AppCompatActivity {
     private netWaitDailog netWaitDailog;
 
     private Handler handler;
+
+    private Thread sendLocation = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(60*1000);
+                searchLocation(nowLocation.getLatitude(), nowLocation.getLongitude());
+                Thread.sleep(4*60*1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,6 +169,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
+
         Toast.makeText(getApplicationContext(), "환영합니다. "+ user.getUname()+"!!", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "USER ID : " + user.getUid() +"\nUSER NAME : " + user.getUname() + "\nUSER EMAIL : " + user.getUemail());
     }
@@ -158,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(isGPS){
             startLocationService();
+            sendLocation.start();
         }else{
             Log.d("GPS", "GPS END");
         }
@@ -219,7 +249,8 @@ public class MainActivity extends AppCompatActivity {
             public boolean handleMessage(Message msg) {
                 if(msg.what == 1){
                     manager = getSupportFragmentManager();
-                    manager.beginTransaction().replace(R.id.Main_container, new MainFragment()).commit();
+                    MainFragment mainFragment = new MainFragment();
+                    manager.beginTransaction().replace(R.id.Main_container, mainFragment).commit();
                 }
                 return true;
             }
@@ -371,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 위치 정보를 받을 위치 리스너 객체 생성
         gpsListener = new GPSListener();
-        long minTime = 5000;//GPS정보 전달 시간 지정 - 5초마다 위치정보 전달
+        long minTime = 4*60*1000;//GPS정보 전달 시간 지정 - 4분마다 위치정보 전달
         float minDistance = 0;//이동거리 지정
 
         //위치정보는 위치 프로바이더(Location Provider)를 통해 얻는다
@@ -395,8 +426,8 @@ public class MainActivity extends AppCompatActivity {
             if (lastLocation != null) {
                 Double latitude = lastLocation.getLatitude();
                 Double longitude = lastLocation.getLongitude();
-                Toast.makeText(getApplicationContext(), "Last Known Location : " + "Latitude : "
-                        + latitude + "\nLongitude:" + longitude, Toast.LENGTH_LONG).show();
+                /*Toast.makeText(getApplicationContext(), "Last Known Location : " + "Latitude : "
+                        + latitude + "\nLongitude:" + longitude, Toast.LENGTH_LONG).show();*/
             }
         } catch(SecurityException ex) {
             ex.printStackTrace();
@@ -410,14 +441,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLocationChanged(Location location) {
             nowLocation = location;
-            Double latitude = location.getLatitude();//위도
-            Double longitude = location.getLongitude();//경도
+            // Double latitude = location.getLatitude();위도
+            // Double longitude = location.getLongitude();경도
 
-            String msg = "Latitude : "+ latitude + "\nLongitude:"+ longitude;
+            String msg = "Latitude : "+ location.getLatitude() + "\nLongitude:"+ location.getLongitude();
 
             Log.i("GPSListener", msg);
 
-            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
         }
 
         public void onProviderDisabled(String provider) {
@@ -427,6 +458,60 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+    }
+
+    private void searchLocation(double lat, double lon){
+        List<Address> addressList = null;
+        try{
+            Geocoder gc = new Geocoder(getApplicationContext(), Locale.KOREAN);
+            addressList = gc.getFromLocation(lat, lon, 1);
+            if(addressList != null){
+                for(int i = 0; i<addressList.size();i++){
+                    Address outAddr = addressList.get(i);
+                    int addrCount = outAddr.getMaxAddressLineIndex()+1;
+                    StringBuffer outAddrStr = new StringBuffer();
+
+                    for(int k=0;k<addrCount;k++){
+                        nowSpot = outAddr.getAddressLine(k);
+                        Log.d("Location", "Location Name : " + nowSpot);
+
+                    }
+                }
+            }
+
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss", Locale.KOREA );
+                        Date currentTime = new Date( );
+                        String dTime = formatter.format ( currentTime );
+                        Log.d("Time", "Current Time : " + dTime);
+
+                        JSONObject postDataParams = new JSONObject();
+                        postDataParams.put("uid", user.getUid());
+                        postDataParams.put("spot", nowSpot);
+                        postDataParams.put("date", dTime);
+                        postDataParams.put("gpsy", nowLocation.getLatitude());
+                        postDataParams.put("gpsx", nowLocation.getLongitude());
+                        Log.e("params",postDataParams.toString());
+                        new SendPostReq("gps/add", postDataParams).post();
+
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    netWaitDailog.dismiss();
+                }
+            });
+
+            t.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -442,14 +527,18 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), LoginActivity.class));
                 finish();
             }else if(resultCode == 2002){
-                isGPS = data.getBooleanExtra("gps", false);
+                boolean isGPS_setting =(boolean) data.getBooleanExtra("gps", false);
+                user=(Account) data.getSerializableExtra("user");
                 Log.d("isGPS", "GPS : " + isGPS );
 
-                if(isGPS){
+                if((isGPS!=isGPS_setting)){
+                    isGPS = isGPS_setting;
                     startLocationService();
+                    sendLocation.start();
                 }else{
                     Log.d("GPS", "GPS END");
                     gmanager.removeUpdates(gpsListener);
+                    sendLocation.interrupt();
                 }
             }
         }

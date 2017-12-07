@@ -4,12 +4,14 @@ package com.hchooney.qewqs.gam.Fragments;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -42,11 +44,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.hchooney.qewqs.gam.CustomItem.SpinnerAdapter01;
 import com.hchooney.qewqs.gam.DetailEventActivity;
 import com.hchooney.qewqs.gam.DetailGuideActivity;
+import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
 import com.hchooney.qewqs.gam.MainActivity;
+import com.hchooney.qewqs.gam.Net.SendGet;
 import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
@@ -107,6 +115,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     private Handler handler;
 
+    private com.hchooney.qewqs.gam.Dialog.netWaitDailog netWaitDailog;
+
     public MapFragment() {
         // Required empty public constructor
     }
@@ -125,6 +135,10 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void init() {
+        netWaitDailog = com.hchooney.qewqs.gam.Dialog.netWaitDailog.newInstance();
+        netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
+        netWaitDailog.setTitle("정보 받아 오는 중");
+
         guidelist = ((MainActivity) getActivity()).getGuidelist();
         eventlist = ((MainActivity) getActivity()).getEventlist();
         SearchDistance = "1";
@@ -163,7 +177,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getContext(), DetailEventActivity.class);
-
+                intent.putExtra("user", ((MainActivity)getActivity()).getUser());
                 intent.putExtra("Event", eventlist.get(event_position));
                 startActivity(intent);
             }
@@ -173,7 +187,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getContext(), DetailGuideActivity.class);
-                intent.putExtra("index", guid_position);
                 intent.putExtra("guideitem", guidelist.get(guid_position));
                 startActivity(intent);
             }
@@ -259,7 +272,15 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         });
 
 
-        handler = new Handler();
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if(msg.what == 1){
+                    setMarkersOnMap(filter.getSelectedItemPosition());
+                }
+                return true;
+            }
+        });
 
     }
 
@@ -283,7 +304,34 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Log.d("Map Filter", "이전 : " + SearchDistance + " / 선택된 값 : " + distance.getSelectedItem());
                 SearchDistance = distance.getSelectedItem().toString().replace(" km", "");
-                loadList(SearchDistance);
+
+
+                netWaitDailog.show(getActivity().getSupportFragmentManager(), "Net Dailog");
+
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+
+                            guidelist.clear();
+                            eventlist.clear();
+                            loadGuide(SearchDistance);
+                            loadEvent(SearchDistance);
+
+                            // 메시지 얻어오기
+                            Message msg = handler.obtainMessage();
+                            // 메시지 ID 설정
+                            msg.what = 1;
+                            handler.sendMessage(msg);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        netWaitDailog.dismiss();
+                    }
+                });
+
+                t.start();
 
 
             }
@@ -296,8 +344,61 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     }
 
-    private void loadList(String Search){
-        Toast.makeText(getContext(), "다음 반경으로 서버와 통신합니다.\n반경 : " + SearchDistance, Toast.LENGTH_LONG).show();
+    private void loadGuide(String dist){
+        Location loc = ((MainActivity)getActivity()).getNowLocation();
+        String res_guide = new SendGet("search/guide", ("?dist="+ dist + "&gpsx=" + loc.getLongitude()+ "&gpsy="+loc.getLatitude())).SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_guide);
+
+        JSONObject guide_data = null;
+        try {
+            guide_data = new JSONObject(res_guide);
+            JSONArray guideArray = guide_data.getJSONArray("guide");
+            for (int i=0;i<guideArray.length();i++){
+                JSONObject obj = (JSONObject) guideArray.get(i);
+                GuideItem item = new GuideItem();
+                item.setGid((Integer.parseInt(obj.get("GID").toString())));
+                item.setgAudio((String) obj.get("GAUDIO"));
+                item.setgImage(obj.get("GPHOTO").toString());
+                item.setgModifyDate(obj.get("GMODIFY").toString().substring(0, 10));
+                item.setGpsx(Double.parseDouble(obj.get("GGPSY").toString()));
+                item.setGpsy(Double.parseDouble(obj.get("GGPSX").toString()));
+                item.setSpot(obj.get("GWHERE").toString());
+                guidelist.add(0, item);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadEvent(String dist){
+        Location loc = ((MainActivity)getActivity()).getNowLocation();
+        String res_event = new SendGet("search/event", ("?dist="+dist + "&gpsx=" + loc.getLongitude()+ "&gpsy="+loc.getLatitude())).SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_event);
+
+        JSONObject event_data = null;
+        try {
+            event_data = new JSONObject(res_event);
+            JSONArray eventArray = event_data.getJSONArray("events");
+            for (int i=0;i<eventArray.length();i++){
+                JSONObject obj = (JSONObject) eventArray.get(i);
+                EventItem item = new EventItem();
+                item.setEid(Integer.parseInt(obj.get("EID").toString()));
+                item.seteName(((String) obj.get("ENAME")));
+                item.seteProfit((String) obj.get("EPROFIT"));
+                item.seteLimitDate(obj.get("EDEADLINE").toString().substring(0, 10));
+                item.seteCordination((String) obj.get("ECORDI"));
+                item.seteGpsx(Double.parseDouble(obj.get("EGPSY").toString()));
+                item.seteGpsy(Double.parseDouble(obj.get("EGPSX").toString()));
+                item.seteNum(Integer.parseInt(obj.get("ENUM").toString()));
+                item.setePhoto(obj.get("GPHOTO").toString());
+                item.seteSpot(obj.get("EWHERE").toString());
+                eventlist.add(0, item);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
 

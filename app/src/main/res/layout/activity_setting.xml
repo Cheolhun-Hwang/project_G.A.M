@@ -141,8 +141,7 @@
                         android:textStyle="bold" />
 
                     <Button
-                        android:background="@color/alpha"
-                        android:id="@+id/Setting_Nickname_change"
+                        android:id="@+id/Setting_Nickname_changeBTN"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
@@ -150,6 +149,7 @@
                         android:layout_marginEnd="14dp"
                         android:layout_marginRight="25dp"
                         android:layout_weight="1"
+                        android:background="@color/alpha"
                         android:gravity="center"
                         android:padding="5dp"
                         android:text="닉네임수정"

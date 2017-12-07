@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.hchooney.qewqs.gam.Database.Account;
 import com.hchooney.qewqs.gam.MainActivity;
 import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventAdapter;
@@ -73,7 +74,7 @@ public class MainFragment extends Fragment {
         guide.setAdapter(new GuideAdapter(guidelist, getContext()));
 
         event.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-        event.setAdapter(new EventAdapter(eventlist, getContext()));
+        event.setAdapter(new EventAdapter(eventlist, getContext(), ((MainActivity)getActivity()).getUser()));
     }
 
 }

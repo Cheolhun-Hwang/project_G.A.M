@@ -3,7 +3,6 @@ package com.hchooney.qewqs.gam;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -26,7 +25,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.hchooney.qewqs.gam.Database.Account;
 import com.hchooney.qewqs.gam.Dialog.netWaitDailog;
 import com.hchooney.qewqs.gam.Net.SendGet;
-import com.hchooney.qewqs.gam.Net.SendPost;
 import com.hchooney.qewqs.gam.Net.SendPostReq;
 
 import org.json.JSONObject;
@@ -215,7 +213,7 @@ public class LoginActivity extends AppCompatActivity {
                             public void run() {
                                 try {
                                     JSONObject postDataParams = new JSONObject();
-                                    postDataParams.put("uid", "0001");
+                                    postDataParams.put("uid", account.getUid());
                                     postDataParams.put("uname", account.getUname());
                                     postDataParams.put("uemail", account.getUemail());
                                     Log.e("params",postDataParams.toString());

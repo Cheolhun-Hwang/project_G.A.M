@@ -2,6 +2,7 @@ package com.hchooney.qewqs.gam.RecyclerList.DetailGuide;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.view.animation.AnimationUtils;
 
 import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideHolder;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -40,6 +42,8 @@ public class DetailGuideAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         DetailGuideHolder hold = (DetailGuideHolder) holder;
 
+        Picasso.with(context).load("http://203.249.127.32:64001/mobile/search/dguide/images?"+imagelist.get(position)).into(hold.detailguideImage);
+        Log.d("IMAGE URL", "http://203.249.127.32:64001/mobile/search/dguide/images?"+imagelist.get(position));
         //이미지 파트
         //hold.detailguideImage.setImageBitmap();
 

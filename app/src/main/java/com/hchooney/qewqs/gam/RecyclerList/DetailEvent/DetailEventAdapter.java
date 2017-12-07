@@ -10,6 +10,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
 import com.hchooney.qewqs.gam.R;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -45,6 +46,9 @@ public class DetailEventAdapter extends RecyclerView.Adapter {
 
         //이미지부분
         //hold.jephotoURL.setImageBitmap();
+
+        Log.d("EVENT URL", "http://203.249.127.32:64001/mobile/mobile/event/join/images?jeid="+list.get(position).getJeid());
+        Picasso.with(context).load("http://203.249.127.32:64001/mobile/event/join/images?jeid="+list.get(position).getJeid()).into(hold.jephotoURL);
 
         String temp = "태그 : ";
         for(int i =0; i<list.get(position).getUids().size();i++){

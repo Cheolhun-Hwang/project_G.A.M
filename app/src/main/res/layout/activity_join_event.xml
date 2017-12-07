@@ -90,9 +90,10 @@
                     android:layout_weight="1"
                     android:ems="30"
                     android:inputType="text"
-                    android:text="Name"
-
-                    android:textColorLink="#FF4081" />
+                    android:textColor="@color/black"
+                    android:textColorLink="#FF4081"
+                    android:gravity="center"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -111,17 +112,19 @@
                     android:textStyle="bold" />
 
                 <EditText
+
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
                     android:id="@+id/Join_Teams"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
                     android:ems="30"
-                    android:gravity="left"
+                    android:gravity="center"
                     android:inputType="text"
-                    android:text="Name"
                     android:textColorLink="#FF4081" />
 
                 <Button
-                    android:id="@+id/Join_tems_search"
+                    android:id="@+id/Join_teams_search"
                     android:layout_width="match_parent"
                     android:layout_height="32dp"
                     android:background="@drawable/round_button"
@@ -131,6 +134,24 @@
                     android:textSize="12dp"
                     android:textStyle="bold" />
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:textSize="13dp"
+                    android:textColor="#0000ff"
+                    android:id="@+id/joinEvent_showTeam_Textview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="팀원을 추가해주세요." />
+            </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>

@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import com.hchooney.qewqs.gam.Database.Account;
 import com.hchooney.qewqs.gam.DetailEventActivity;
 import com.hchooney.qewqs.gam.R;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideHolder;
@@ -25,13 +26,15 @@ import java.util.ArrayList;
 public class EventAdapter extends RecyclerView.Adapter {
     private ArrayList<EventItem> list;
     private Context context;
+    private Account account;
 
     // Allows to remember the last item shown on screen
     private int lastPosition = -1;
 
-    public EventAdapter(ArrayList<EventItem> list, Context context) {
+    public EventAdapter(ArrayList<EventItem> list, Context context, Account ac) {
         this.list = list;
         this.context = context;
+        this.account = ac;
     }
 
     @Override
@@ -59,6 +62,7 @@ public class EventAdapter extends RecyclerView.Adapter {
                 Intent intent = new Intent(context, DetailEventActivity.class);
                 Log.d("Guide Adapter", "VIew ID : " + view.getId());
                 intent.putExtra("Event", list.get(position));
+                intent.putExtra("user", account);
                 view.getContext().startActivity(intent);
             }
         });

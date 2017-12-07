@@ -4,6 +4,8 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -24,9 +26,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.hchooney.qewqs.gam.Net.SendGet;
 import com.hchooney.qewqs.gam.RecyclerList.DetailGuide.DetaiGuideItem;
 import com.hchooney.qewqs.gam.RecyclerList.DetailGuide.DetailGuideAdapter;
 import com.hchooney.qewqs.gam.RecyclerList.Guide.GuideItem;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,6 +66,8 @@ public class DetailGuideActivity extends AppCompatActivity {
     private ImageButton stop;
     private SeekBar seekBar;
 
+    private Handler handler;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,16 +76,24 @@ public class DetailGuideActivity extends AppCompatActivity {
 
         init();
         setMap();
-        loadData();
-        ListSetup();
-        SetUI();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                loadData();
+                // 메시지 얻어오기
+                Message msg = handler.obtainMessage();
+                // 메시지 ID 설정
+                msg.what = 1;
+                handler.sendMessage(msg);
+            }
+        }).start();
+
 
     }
 
     private void init(){
-        index = getIntent().getIntExtra("index", -1);
         guideItem = (GuideItem) getIntent().getSerializableExtra("guideitem");
-        if(index == -1 || guideItem ==null){
+        if(guideItem ==null){
             Toast.makeText(getApplicationContext(), "세부가이드 정보를 받지 못했습니다.\n잠시 후 다시 시도해 주세요.", Toast.LENGTH_LONG).show();
             finish();
         }else{
@@ -172,6 +189,17 @@ public class DetailGuideActivity extends AppCompatActivity {
                 isprepared = true;
             }
         });
+
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if(msg.what == 1){
+                    ListSetup();
+                    SetUI();
+                }
+                return true;
+            }
+        });
     }
 
     private void SetUI(){
@@ -190,10 +218,10 @@ public class DetailGuideActivity extends AppCompatActivity {
 
                 float bitmapDescriptorFactory = 0;
                 //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(guideItem.getGpsy(), guideItem.getGpsx()), 14));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.553186, 126.972013), 15));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(guideItem.getGpsy(), guideItem.getGpsx()), 15));
                 bitmapDescriptorFactory = BitmapDescriptorFactory.HUE_ROSE;
                 mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(37.553186, 126.972013))
+                        .position(new LatLng(guideItem.getGpsy(), guideItem.getGpsx()))
                         .icon(BitmapDescriptorFactory.defaultMarker(bitmapDescriptorFactory))
                         .title(guideItem.getSpot())
                         .zIndex((float) 0)
@@ -223,10 +251,29 @@ public class DetailGuideActivity extends AppCompatActivity {
         // 2. 세부 가이드 정보를 받아야 한다.
 
         detaiGuideItem = new DetaiGuideItem();
-        detaiGuideItem.setContext("임시 장소에 대한 상세 가이드 내용입니다.\n" +
-                "일반적인 폼 형태는 내부적으로 컨트롤합니다.\n" +
-                "최대한 심플하게 구현하여 개발시간을 단축합니다.");
-        detaiGuideItem.setImageList(new ArrayList<String>(Arrays.asList("image_URL_1", "image_URL_2", "image_URL_3")));
+        String res_dguide = new SendGet("search/gdetail", ("?gid="+guideItem.getGid())).SendGet();
+        Log.d("Res NOTICE", "RESULT : " + res_dguide);
+
+        JSONObject guide_data = null;
+        try {
+            guide_data = new JSONObject(res_dguide);
+            JSONArray dguideArray = guide_data.getJSONArray("dguide");
+            for (int i=0;i<dguideArray.length();i++){
+                JSONObject obj = (JSONObject) dguideArray.get(i);
+                detaiGuideItem.setContext(((String) obj.get("GCONTEXT")));
+                int img_num = Integer.parseInt(obj.get("GPHOTOURLS").toString());
+
+                ArrayList<String> array=new ArrayList<String>();
+                for(int j = 0;j<img_num; j++){
+                    array.add("gid="+guideItem.getGid()+"&file="+(j+1)+".jpg");
+                }
+
+                detaiGuideItem.setImageList(array);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -41,9 +41,6 @@ public class GuideAdapter extends RecyclerView.Adapter {
 
     private Bitmap bitmap=null;
 
-    private int nowPosition;
-    private Handler handler;
-
     private GuideHolder hold;
 
     // Allows to remember the last item shown on screen
@@ -52,16 +49,6 @@ public class GuideAdapter extends RecyclerView.Adapter {
     public GuideAdapter(ArrayList<GuideItem> list, Context context) {
         this.list = list;
         this.context = context;
-        handler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-
-                if(msg.what == 1){
-                    hold.guide_image.setImageBitmap(bitmap);
-                }
-                return true;
-            }
-        });
     }
 
     @Override
@@ -73,40 +60,11 @@ public class GuideAdapter extends RecyclerView.Adapter {
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        nowPosition = position;
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         hold = (GuideHolder) holder;
         hold.guide_title.setText(list.get(position).getSpot());
 
-
-        //image 따로 해야됨
-
-        //rounding
-        /*GradientDrawable drawable=(GradientDrawable) context.getDrawable(R.drawable.image_rounding);
-        hold.guide_image.setBackground(drawable);
-        hold.guide_image.setClipToOutline(true);*/
-
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-
-                    connectURL();
-                    // 메시지 얻어오기
-                    Message msg = handler.obtainMessage();
-                    // 메시지 ID 설정
-                    msg.what = 1;
-                    handler.sendMessage(msg);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-
-        //t.start();
-
-        Picasso.with(context).load("http://203.249.127.32:64001/mobile/search/guide/images?gid="+list.get(nowPosition).getGid()).into(hold.guide_image);
+        Picasso.with(context).load("http://203.249.127.32:64001/mobile/search/guide/images?gid="+list.get(position).getGid()).into(hold.guide_image);
 
 
 
@@ -118,9 +76,7 @@ public class GuideAdapter extends RecyclerView.Adapter {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(context, DetailGuideActivity.class);
-                Log.d("Guide Adapter", "VIew ID : " + view.getId());
-                intent.putExtra("index", nowPosition);
-                intent.putExtra("guideitem", list.get(nowPosition));
+                intent.putExtra("guideitem", list.get(position));
                 view.getContext().startActivity(intent);
             }
         });
@@ -139,23 +95,6 @@ public class GuideAdapter extends RecyclerView.Adapter {
             Animation animation = AnimationUtils.loadAnimation(context, R.anim.slide_down_in);
             viewToAnimate.startAnimation(animation);
             lastPosition = position;
-        }
-    }
-
-    private void connectURL(){
-        try {
-            URL url = new URL("http://203.249.127.32:64001/mobile/search/guide/images?gid="+list.get(nowPosition).getGid());
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput(true);
-            conn.connect();
-
-            InputStream is = conn.getInputStream();
-            bitmap = BitmapFactory.decodeStream(is);
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }
