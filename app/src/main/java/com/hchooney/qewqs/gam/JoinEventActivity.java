@@ -1,18 +1,15 @@
 package com.hchooney.qewqs.gam;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,7 +20,6 @@ import android.widget.Toast;
 
 import com.hchooney.qewqs.gam.Database.Account;
 import com.hchooney.qewqs.gam.Dialog.AgreeEventFragment;
-import com.hchooney.qewqs.gam.Fragments.MainFragment;
 import com.hchooney.qewqs.gam.Net.SendMultiPartformImage;
 import com.hchooney.qewqs.gam.Net.SendPostReq;
 import com.hchooney.qewqs.gam.RecyclerList.Event.EventItem;
@@ -33,7 +29,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -60,6 +55,9 @@ public class JoinEventActivity extends AppCompatActivity {
     private Handler handler;
 
     private Uri uri;
+    private String path;
+
+    private Bitmap saveBitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +106,7 @@ public class JoinEventActivity extends AppCompatActivity {
         Join_CompleteBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("Send Server", "Send Image Post END JOIN");
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -117,13 +116,19 @@ public class JoinEventActivity extends AppCompatActivity {
                         Log.d("Time", "Current Time : " + dTime);
 
                         File file = new File(uri.getPath());
-                        String result = new SendMultiPartformImage("event/join").
+                        final String result = new SendMultiPartformImage("event/join").
                                 uploadFile(file,
                                             eventItem.getEid()+"_"+dTime.replaceAll(" ", "-")+"_T_"+user.getUid(),
                                             user.getUid(),
                                             eventItem.getEid(),
                                             dTime,
                                             Join_Title.getText().toString());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.e("UPLOAD RES", "IMAGE RES : " + result);
+                            }
+                        });
                     }
                 }).start();
             }
@@ -204,7 +209,9 @@ public class JoinEventActivity extends AppCompatActivity {
         if(requestCode == SIGNAL_toGallery){
             if(resultCode == Activity.RESULT_OK){
                 try {
+                    Log.d("Galley Image URL", "URL : " + data.getData());
                     uri = Uri.parse(data.getData()+"");
+                    path = data.getDataString();
                     Bitmap bitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), uri);
 
                     //리사이즈
@@ -220,6 +227,7 @@ public class JoinEventActivity extends AppCompatActivity {
                         width = resized.getWidth();
                     }
 
+                    saveBitmap = resized;
                     //배치해놓은 ImageView에 set
                     addGalley.setImageBitmap(resized);
 

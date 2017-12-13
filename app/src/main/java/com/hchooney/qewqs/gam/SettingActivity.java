@@ -186,14 +186,6 @@ public class SettingActivity extends AppCompatActivity {
 
     private void dataLoad(){
         wlist = new ArrayList<WarningItem>();
-
-        //임시
-        /*list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));
-        list.add(new WarningItem("2017.00.00 00:00", "임시 계정 경고 내역 사항입니다"));*/
         String res_warning = new SendGet("set/warning", ("?uid="+user.getUid())).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_warning);
 

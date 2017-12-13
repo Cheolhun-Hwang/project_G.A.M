@@ -69,7 +69,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private static ArrayList<GuideItem> guidelist;
     private static ArrayList<EventItem> eventlist;
 
-
     public GoogleMap mMap;
     private SupportMapFragment supportMapFragment;
 
@@ -92,7 +91,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private TextView detail_guide_distance;
     private ImageButton detail_guide_audio_play;
     private ImageButton detail_guide_audio_stop;
-    private SeekBar detail_guide_audio_progress;
 
     private ImageView detail_event_imageview;
     private TextView detail_event_profit;
@@ -107,11 +105,12 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private boolean isprepared = false;
     private boolean isplay = false;
 
+    private double lat;
+    private double lon;
+
 
     private int guid_position;
     private int event_position;
-
-    private int pausePosition;
 
     private Handler handler;
 
@@ -139,10 +138,12 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         netWaitDailog.setMessage("서버에서 서비스 정보를 받아오는 중입니다.");
         netWaitDailog.setTitle("정보 받아 오는 중");
 
+        lat = (double) getArguments().getDouble("lat");
+        lon = (double)getArguments().getDouble("lon");
+
         guidelist = ((MainActivity) getActivity()).getGuidelist();
         eventlist = ((MainActivity) getActivity()).getEventlist();
         SearchDistance = "1";
-        pausePosition=0;
 
         filter = (Spinner) v.findViewById(R.id.MapSpinner_Filter);
         filterAdapter = new SpinnerAdapter01(getContext(), new ArrayList<String>(Arrays.asList("전  체", "가이드", "이벤트")));
@@ -248,29 +249,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 }
             }
         });
-        detail_guide_audio_progress = (SeekBar) v.findViewById(R.id.map_guid_AudioSeek);
-        detail_guide_audio_progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if(seekBar.getMax() == i){
-
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mp.pause();
-                isplay = false;
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                isplay = true;
-                mp.seekTo(seekBar.getProgress());
-                mp.start();
-            }
-        });
-
 
         handler = new Handler(new Handler.Callback() {
             @Override
@@ -345,8 +323,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void loadGuide(String dist){
-        Location loc = ((MainActivity)getActivity()).getNowLocation();
-        String res_guide = new SendGet("search/guide", ("?dist="+ dist + "&gpsx=" + loc.getLongitude()+ "&gpsy="+loc.getLatitude())).SendGet();
+        String res_guide = new SendGet("search/guide", ("?dist="+ dist + "&gpsx=" + lon+ "&gpsy="+lat)).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_guide);
 
         JSONObject guide_data = null;
@@ -360,8 +337,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 item.setgAudio((String) obj.get("GAUDIO"));
                 item.setgImage(obj.get("GPHOTO").toString());
                 item.setgModifyDate(obj.get("GMODIFY").toString().substring(0, 10));
-                item.setGpsx(Double.parseDouble(obj.get("GGPSY").toString()));
-                item.setGpsy(Double.parseDouble(obj.get("GGPSX").toString()));
+                item.setGpsx(Double.parseDouble(obj.get("GGPSX").toString()));
+                item.setGpsy(Double.parseDouble(obj.get("GGPSY").toString()));
                 item.setSpot(obj.get("GWHERE").toString());
                 guidelist.add(0, item);
             }
@@ -372,8 +349,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void loadEvent(String dist){
-        Location loc = ((MainActivity)getActivity()).getNowLocation();
-        String res_event = new SendGet("search/event", ("?dist="+dist + "&gpsx=" + loc.getLongitude()+ "&gpsy="+loc.getLatitude())).SendGet();
+        String res_event = new SendGet("search/event", ("?dist="+dist + "&gpsx=" + lon+ "&gpsy="+lat)).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_event);
 
         JSONObject event_data = null;
@@ -388,8 +364,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 item.seteProfit((String) obj.get("EPROFIT"));
                 item.seteLimitDate(obj.get("EDEADLINE").toString().substring(0, 10));
                 item.seteCordination((String) obj.get("ECORDI"));
-                item.seteGpsx(Double.parseDouble(obj.get("EGPSY").toString()));
-                item.seteGpsy(Double.parseDouble(obj.get("EGPSX").toString()));
+                item.seteGpsx(Double.parseDouble(obj.get("EGPSX").toString()));
+                item.seteGpsy(Double.parseDouble(obj.get("EGPSY").toString()));
                 item.seteNum(Integer.parseInt(obj.get("ENUM").toString()));
                 item.setePhoto(obj.get("GPHOTO").toString());
                 item.seteSpot(obj.get("EWHERE").toString());
@@ -516,10 +492,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             );
 
             event.setTag(1);
-
-            //정보창 클릭 리스너
-            //mMap.setOnInfoWindowClickListener(infoWindowClickListener);
-
             //마커 클릭 리스너
             this.mMap.setOnMarkerClickListener(this);
         }

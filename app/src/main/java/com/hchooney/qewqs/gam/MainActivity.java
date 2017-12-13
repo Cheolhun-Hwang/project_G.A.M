@@ -49,11 +49,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static java.lang.Thread.State.RUNNABLE;
+
 public class MainActivity extends AppCompatActivity {
     private final static int SIG_LOGOUT = 4004;
 
     private boolean isGPS;
-    private Location nowLocation;
+    private double nowLon;
+    private double nowLat;
     private String nowSpot;
     private GPSListener gpsListener;
     private LocationManager gmanager;
@@ -70,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
 
     private FragmentManager manager;
 
+    /*
+     * DTO를 따로 두지 않으며 MainActivity 자체가 DTO 역할을 하도록 함.
+     * 좋지 않은 방식이나 빠른 개발을 위해 진행.
+    */
     public static void setUser(Account u) {
         user = u;
     }
@@ -108,10 +115,6 @@ public class MainActivity extends AppCompatActivity {
         isGPS = GPS;
     }
 
-    public Location getNowLocation() {
-        return nowLocation;
-    }
-
     private ImageButton Map;
     private ImageButton Gift;
     private ImageButton Setting;
@@ -122,17 +125,18 @@ public class MainActivity extends AppCompatActivity {
 
     private Handler handler;
 
-    private Thread sendLocation = new Thread(new Runnable() {
+    Thread data = new Thread(new Runnable() {
         @Override
         public void run() {
             try {
-                Thread.sleep(60*1000);
-                searchLocation(nowLocation.getLatitude(), nowLocation.getLongitude());
-                Thread.sleep(4*60*1000);
-            } catch (InterruptedException e) {
+                SetData();
+                Message msg = handler.obtainMessage();
+                msg.what = 1;
+                handler.sendMessage(msg);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            netWaitDailog.dismiss();
         }
     });
 
@@ -142,37 +146,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         init();
-
         netWaitDailog.show(getSupportFragmentManager(), "Net Dailog");
-
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-
-                    SetData();
-
-                    // 메시지 얻어오기
-                    Message msg = handler.obtainMessage();
-                    // 메시지 ID 설정
-                    msg.what = 1;
-                    handler.sendMessage(msg);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                netWaitDailog.dismiss();
-            }
-        });
-
-        t.start();
+        if(isGPS){
+            startLocationService();
+        }
+        data.start();
 
 
-
-
-
-        Toast.makeText(getApplicationContext(), "환영합니다. "+ user.getUname()+"!!", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "USER ID : " + user.getUid() +"\nUSER NAME : " + user.getUname() + "\nUSER EMAIL : " + user.getUemail());
+        if(user.getUnickname().equals("null")){
+            Toast.makeText(getApplicationContext(), "환영합니다. "+ user.getUname()+" !!", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(getApplicationContext(), "환영합니다. "+ user.getUnickname()+" !!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -181,13 +166,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init(){
+        if(getIntent().getStringExtra("nick") != null){
+            user.setUnickname(getIntent().getStringExtra("nick").toString());
+        }
         isGPS = true;
-        nowLocation = null;
         gpsListener = null;
 
         if(isGPS){
             startLocationService();
-            sendLocation.start();
         }else{
             Log.d("GPS", "GPS END");
         }
@@ -207,11 +193,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(ishomeandmap){
-                    manager.beginTransaction().replace(R.id.Main_container, new MainFragment()).commit();
+                    MainFragment fragment = new MainFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putDouble("lat", nowLat);
+                    bundle.putDouble("lon", nowLon);
+                    fragment.setArguments(bundle);
+                    manager.beginTransaction().replace(R.id.Main_container, fragment).commit();
                     Map.setImageResource(R.drawable.ic_map_24dp);
                     ishomeandmap = false;
                 }else{
-                    manager.beginTransaction().replace(R.id.Main_container, new MapFragment()).commit();
+                    MapFragment fragment = new MapFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putDouble("lat", nowLat);
+                    bundle.putDouble("lon", nowLon);
+                    fragment.setArguments(bundle);
+                    manager.beginTransaction().replace(R.id.Main_container, fragment).commit();
                     Map.setImageResource(R.drawable.ic_home);
                     ishomeandmap = true;
                 }
@@ -250,6 +246,10 @@ public class MainActivity extends AppCompatActivity {
                 if(msg.what == 1){
                     manager = getSupportFragmentManager();
                     MainFragment mainFragment = new MainFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putDouble("lat", nowLat);
+                    bundle.putDouble("lon", nowLon);
+                    mainFragment.setArguments(bundle);
                     manager.beginTransaction().replace(R.id.Main_container, mainFragment).commit();
                 }
                 return true;
@@ -259,18 +259,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SetData(){
-        //notify
-        //temp
-        notifylist = new ArrayList<NotifyItem>();
-        /*notifylist.add(new NotifyItem("0001", "공지사항 제목 1", "2017-00-00 00:00", "공지사항 1의 공지내용입니다.", "관리자"));
-        notifylist.add(new NotifyItem("0002", "공지사항 제목 2", "2017-00-00 00:00", "공지사항 2의 공지내용입니다.", "관리자"));
-        notifylist.add(new NotifyItem("0003", "공지사항 제목 3", "2017-00-00 00:00", "공지사항 3의 공지내용입니다.", "관리자"));
-        notifylist.add(new NotifyItem("0004", "공지사항 제목 4", "2017-00-00 00:00", "공지사항 4의 공지내용입니다.", "관리자"));
-        notifylist.add(new NotifyItem("0005", "공지사항 제목 5", "2017-00-00 00:00", "공지사항 5의 공지내용입니다.", "관리자"));*/
+        if(nowLon == 0.0){
+            //최초 값 지속시
+            nowLat = 37.450933;
+            nowLon =  127.127045;
+        }
 
+        //notify
+        notifylist = new ArrayList<NotifyItem>();
         String res_notice = new SendGet("notice/list", "").SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_notice);
-
         JSONObject notice_data = null;
         try {
             notice_data = new JSONObject(res_notice);
@@ -285,25 +283,14 @@ public class MainActivity extends AppCompatActivity {
                 item.setNid((String) (obj.get("NID")+""));
                 notifylist.add(0, item);
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-
         //guide
-        //temp
         guidelist = new ArrayList<GuideItem>();
-        /*guidelist.add(new GuideItem(1, "임시 장소 이름", 127.128876, 37.455127, "None", "None", "2017-00-00 00:00"));
-        guidelist.add(new GuideItem(2, "임시 장소 이름", 127.128876, 37.459136, "None", "None", "2017-00-00 00:00"));
-        guidelist.add(new GuideItem(3, "임시 장소 이름", 127.128876, 37.457115, "None", "None", "2017-00-00 00:00"));
-        guidelist.add(new GuideItem(4, "임시 장소 이름", 127.128876, 37.461104, "None", "None", "2017-00-00 00:00"));
-        guidelist.add(new GuideItem(5, "임시 장소 이름", 127.128876, 37.471153, "None", "None", "2017-00-00 00:00"));
-        guidelist.add(new GuideItem(6, "임시 장소 이름", 127.128876, 37.450162, "None", "None", "2017-00-00 00:00"));*/
-
-        String res_guide = new SendGet("search/guide", ("?dist=1&gpsx=127.127163&gpsy=37.450881")).SendGet();
+        String res_guide = new SendGet("search/guide", ("?dist=1&gpsx="+nowLon+"&gpsy="+nowLat)).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_guide);
-
         JSONObject guide_data = null;
         try {
             guide_data = new JSONObject(res_guide);
@@ -315,8 +302,8 @@ public class MainActivity extends AppCompatActivity {
                 item.setgAudio((String) obj.get("GAUDIO"));
                 item.setgImage(obj.get("GPHOTO").toString());
                 item.setgModifyDate(obj.get("GMODIFY").toString().substring(0, 10));
-                item.setGpsx(Double.parseDouble(obj.get("GGPSY").toString()));
-                item.setGpsy(Double.parseDouble(obj.get("GGPSX").toString()));
+                item.setGpsx(Double.parseDouble(obj.get("GGPSX").toString()));
+                item.setGpsy(Double.parseDouble(obj.get("GGPSY").toString()));
                 item.setSpot(obj.get("GWHERE").toString());
                 guidelist.add(0, item);
             }
@@ -325,18 +312,10 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
-
         //event
-        //temp
         eventlist = new ArrayList<EventItem>();
-        /*eventlist.add(new EventItem(1, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128875, 37.452197, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(2, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128874, 37.431127, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(3, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128873, 37.451247, "이벤트 당첨 혜택"));
-        eventlist.add(new EventItem(4, "임시 이벤트 이름", "2017.00.00 00:00", "이벤트 조건 문자열", "임시 이벤트 장소 이름", 0, 127.128872, 37.450067, "이벤트 당첨 혜택"));*/
-        String res_event = new SendGet("search/event", ("?dist=1&gpsx=127.127163&gpsy=37.450881")).SendGet();
+        String res_event = new SendGet("search/event", ("?dist=1&gpsx="+nowLon+"&gpsy="+nowLat)).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_event);
-
         JSONObject event_data = null;
         try {
             event_data = new JSONObject(res_event);
@@ -349,8 +328,8 @@ public class MainActivity extends AppCompatActivity {
                 item.seteProfit((String) obj.get("EPROFIT"));
                 item.seteLimitDate(obj.get("EDEADLINE").toString().substring(0, 10));
                 item.seteCordination((String) obj.get("ECORDI"));
-                item.seteGpsx(Double.parseDouble(obj.get("EGPSY").toString()));
-                item.seteGpsy(Double.parseDouble(obj.get("EGPSX").toString()));
+                item.seteGpsx(Double.parseDouble(obj.get("EGPSX").toString()));
+                item.seteGpsy(Double.parseDouble(obj.get("EGPSY").toString()));
                 item.seteNum(Integer.parseInt(obj.get("ENUM").toString()));
                 item.setePhoto(obj.get("GPHOTO").toString());
                 item.seteSpot(obj.get("EWHERE").toString());
@@ -361,19 +340,10 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
         //coupon
-        //temp
         couponlist = new ArrayList<CouponItem>();
-        /*couponlist.add(new CouponItem(1, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
-        couponlist.add(new CouponItem(2, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
-        couponlist.add(new CouponItem(3, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
-        couponlist.add(new CouponItem(4, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));
-        couponlist.add(new CouponItem(5, "임시 이벤트 명", "쿠폰 혜택 / 쿠폰 명", "2017.00.00 00:00", "None"));*/
-
         String res_coupon = new SendGet("coupon/list", ("?uid="+user.getUid())).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_coupon);
-
         JSONObject coupon_data = null;
         try {
             coupon_data = new JSONObject(res_coupon);
@@ -402,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 위치 정보를 받을 위치 리스너 객체 생성
         gpsListener = new GPSListener();
-        long minTime = 4*60*1000;//GPS정보 전달 시간 지정 - 4분마다 위치정보 전달
+        long minTime = 24000;//GPS정보 전달 시간 지정 - 4분마다 위치정보 전달
         float minDistance = 0;//이동거리 지정
 
         //위치정보는 위치 프로바이더(Location Provider)를 통해 얻는다
@@ -424,10 +394,8 @@ public class MainActivity extends AppCompatActivity {
             // 위치 확인이 안되는 경우에도 최근에 확인된 위치 정보 먼저 확인
             Location lastLocation = gmanager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (lastLocation != null) {
-                Double latitude = lastLocation.getLatitude();
-                Double longitude = lastLocation.getLongitude();
-                /*Toast.makeText(getApplicationContext(), "Last Known Location : " + "Latitude : "
-                        + latitude + "\nLongitude:" + longitude, Toast.LENGTH_LONG).show();*/
+                nowLat = lastLocation.getLatitude();
+                nowLon = lastLocation.getLongitude();
             }
         } catch(SecurityException ex) {
             ex.printStackTrace();
@@ -440,15 +408,13 @@ public class MainActivity extends AppCompatActivity {
         //위치 정보가 확인(수신)될 때마다 자동 호출되는 메소드
         @Override
         public void onLocationChanged(Location location) {
-            nowLocation = location;
-            // Double latitude = location.getLatitude();위도
-            // Double longitude = location.getLongitude();경도
+            nowLat = location.getLatitude();
+            nowLon = location.getLongitude();
 
-            String msg = "Latitude : "+ location.getLatitude() + "\nLongitude:"+ location.getLongitude();
-
+            String msg = "Latitude : "+  location.getLatitude() + "\nLongitude:"+ location.getLongitude();
+            searchLocation(location.getLatitude(), location.getLongitude());
             Log.i("GPSListener", msg);
 
-            //Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
         }
 
         public void onProviderDisabled(String provider) {
@@ -493,12 +459,10 @@ public class MainActivity extends AppCompatActivity {
                         postDataParams.put("uid", user.getUid());
                         postDataParams.put("spot", nowSpot);
                         postDataParams.put("date", dTime);
-                        postDataParams.put("gpsy", nowLocation.getLatitude());
-                        postDataParams.put("gpsx", nowLocation.getLongitude());
+                        postDataParams.put("gpsy", nowLat);
+                        postDataParams.put("gpsx", nowLon);
                         Log.e("params",postDataParams.toString());
                         new SendPostReq("gps/add", postDataParams).post();
-
-
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -534,11 +498,9 @@ public class MainActivity extends AppCompatActivity {
                 if((isGPS!=isGPS_setting)){
                     isGPS = isGPS_setting;
                     startLocationService();
-                    sendLocation.start();
                 }else{
                     Log.d("GPS", "GPS END");
                     gmanager.removeUpdates(gpsListener);
-                    sendLocation.interrupt();
                 }
             }
         }

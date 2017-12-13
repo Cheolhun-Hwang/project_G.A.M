@@ -47,9 +47,15 @@ public class MainFragment extends Fragment {
         v = inflater.inflate(R.layout.fragment_main, container, false);
 
         init();
-        ListSetup();
+
 
         return v;
+    }
+
+    @Override
+    public void onStart() {
+        ListSetup();
+        super.onStart();
     }
 
     private void init(){

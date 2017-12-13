@@ -54,6 +54,7 @@ public class SendMultiPartformImage {
         Response response = null;
         try {
             response = client.newCall(request).execute();
+            return response.body().string();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,6 +65,6 @@ public class SendMultiPartformImage {
                 e.printStackTrace();
             }
         }
-        return imageName;
+        return "None";
     }
 }

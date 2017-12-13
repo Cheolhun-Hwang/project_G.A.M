@@ -101,11 +101,7 @@ public class LoginActivity extends AppCompatActivity {
                     try {
                         String recieve = new SendGet("login/checkuid", "?uid="+account.getUid()).SendGet().replaceAll(" ", "");
                         Log.d("Login Activity", recieve);
-
-                        // 메시지 얻어오기
                         Message msg = handler.obtainMessage();
-
-                        // 메시지 ID 설정
                         msg.what = 3;
                         msg.obj = recieve;
                         handler.sendMessage(msg);
@@ -120,8 +116,6 @@ public class LoginActivity extends AppCompatActivity {
             t.start();
 
         } else {
-            // Signed out, show unauthenticated UI.
-            //updateUI(false);
             Toast.makeText(getApplicationContext(), "로그인에 실패하였습니다.", Toast.LENGTH_SHORT).show();
         }
     }
@@ -130,7 +124,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         startAnim();
         super.onStart();
-        //Loading.start();
     }
 
     @Override
@@ -193,18 +186,21 @@ public class LoginActivity extends AppCompatActivity {
                     googleSign.setVisibility(View.VISIBLE);
                 }else if(msg.what == 3){
                     String resString = (String)msg.obj;
-                    int parseint = Integer.parseInt(resString.replace("\n", ""));
+                    Log.d("LOGIN RESPONCE", "RES : " + resString);
+                    String resSplit[] = resString.replace("\n", "").split("/");
+
+                    int parseint = Integer.parseInt(resSplit[0].replaceAll(" ", ""));
 
                     Log.d("Handler", "Recieve : " + parseint);
                     if(parseint == 1){
                         Log.d("Handler", "equals True");
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("nick", resSplit[1].replaceAll(" ", ""));
                         startActivity(intent);
                         finish();
                     }else if(parseint == 0){
                         Toast.makeText(getApplicationContext(), "현 계정은 제재 대상입니다\n더 이상 서비스를 이용하실 수 없습니다]\n관련사항은 문의주시기 바랍니다", Toast.LENGTH_LONG).show();
                     }else if(parseint == 2){
-
                         netWaitDailog.setTitle("계정 정보 생성");
                         netWaitDailog.setMessage("첫 로그인으로 인한 계정 정보 생성 중 입니다");
                         netWaitDailog.show(getSupportFragmentManager(), "Net Dailog");
@@ -218,8 +214,6 @@ public class LoginActivity extends AppCompatActivity {
                                     postDataParams.put("uemail", account.getUemail());
                                     Log.e("params",postDataParams.toString());
                                     new SendPostReq("login/create", postDataParams).post();
-
-
 
                                 } catch (Exception e) {
                                     e.printStackTrace();

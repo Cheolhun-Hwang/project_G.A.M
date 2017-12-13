@@ -50,7 +50,6 @@ public class DetailGuideActivity extends AppCompatActivity {
 
 
     //리소스
-    private int index;
     private DetaiGuideItem detaiGuideItem;
     private GuideItem guideItem;
 
@@ -64,7 +63,6 @@ public class DetailGuideActivity extends AppCompatActivity {
 
     private ImageButton play;
     private ImageButton stop;
-    private SeekBar seekBar;
 
     private Handler handler;
 
@@ -145,28 +143,6 @@ public class DetailGuideActivity extends AppCompatActivity {
                     isplay = false;
                     play.setImageResource(R.drawable.ic_play_arrow);
                 }
-            }
-        });
-        seekBar = (SeekBar) findViewById(R.id.DetailGuide_AudioSeek);
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if(seekBar.getMax() == i){
-
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mp.pause();
-                isplay = false;
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                isplay = true;
-                mp.seekTo(seekBar.getProgress());
-                mp.start();
             }
         });
 

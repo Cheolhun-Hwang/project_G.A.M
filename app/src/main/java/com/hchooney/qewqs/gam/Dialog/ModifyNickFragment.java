@@ -161,6 +161,7 @@ public class ModifyNickFragment extends DialogFragment {
     private boolean checkNick(){
         String temp = nickEdit.getText().toString();
         if(!temp.matches("[0-9|a-z|A-Z|ㄱ-ㅎ|ㅏ-ㅣ|가-힝]*")){
+            Toast.makeText(getContext(), "특수문자가 포함되어 있는지 확인해주세요.", Toast.LENGTH_SHORT).show();
             return false;
         }else{
             return true;
