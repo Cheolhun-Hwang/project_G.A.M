@@ -159,6 +159,8 @@ public class JoinEventActivity extends AppCompatActivity {
                     joinEvent_showTeam_Textview.setText(temp);
                 }else if(msg.what==2){
 
+                }else if(msg.what==11 || msg.what==12){
+                    Toast.makeText(getApplicationContext(), "구글 이메일을 다시 확인해주세요.", Toast.LENGTH_LONG).show();
                 }
                 return true;
             }
@@ -174,25 +176,30 @@ public class JoinEventActivity extends AppCompatActivity {
                 try {
                     JSONObject postDataParams = new JSONObject();
                     postDataParams.put("uemail", Join_Teams.getText().toString());
-                    postDataParams.put("gpsx", eventItem.geteGpsy());
-                    postDataParams.put("gpsy", eventItem.geteGpsx());
+                    postDataParams.put("gpsx", eventItem.geteGpsx());
+                    postDataParams.put("gpsy", eventItem.geteGpsy());
                     Log.e("params",postDataParams.toString());
                     String res_user = new SendPostReq("event/addteam", postDataParams).post();
                     Log.d("Res NOTICE", "RESULT : " + res_user);
-
-                    user_data = new JSONObject(res_user);
-                    JSONArray userArray = user_data.getJSONArray("add");
-                    for (int i=0;i<userArray.length();i++){
-                        JSONObject obj = (JSONObject) userArray.get(i);
-                        userList.add(obj.get("UNAME").toString());
+                    if(res_user.equals("None")){
+                        Message msg = handler.obtainMessage();
+                        msg.what = 11;
+                        handler.sendMessage(msg);
+                    }else if(res_user.equals("NODIST")){
+                        Message msg = handler.obtainMessage();
+                        msg.what = 12;
+                        handler.sendMessage(msg);
+                    }else{
+                        user_data = new JSONObject(res_user);
+                        JSONArray userArray = user_data.getJSONArray("add");
+                        for (int i=0;i<userArray.length();i++){
+                            JSONObject obj = (JSONObject) userArray.get(i);
+                            userList.add(obj.get("UNAME").toString());
+                        }
+                        Message msg = handler.obtainMessage();
+                        msg.what = 1;
+                        handler.sendMessage(msg);
                     }
-
-                    // 메시지 얻어오기
-                    Message msg = handler.obtainMessage();
-                    // 메시지 ID 설정
-                    msg.what = 1;
-                    handler.sendMessage(msg);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

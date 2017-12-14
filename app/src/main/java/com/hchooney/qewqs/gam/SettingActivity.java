@@ -175,6 +175,7 @@ public class SettingActivity extends AppCompatActivity {
                 }else{
                     isGPS = false;
                 }
+                Log.e("ISGPS", "IS GPS STATE : " + isGPS);
             }
         });
 

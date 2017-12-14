@@ -538,6 +538,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
         GuideItem item = guidelist.get(guid_position);
         detail_guid_title.setText(item.getSpot());
+        detail_guide_distance.setText("(거리 : "+calcDistance(lat, lon, item.getGpsy(), item.getGpsx())+")");
 
         String temp[] = item.getgAudio().split("/");
         String url = temp[temp.length-1];
@@ -576,6 +577,26 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     }
 
+    public static String calcDistance(double ngpsx, double ngpsy, double rgpsx, double rgpsy){
+        double EARTH_R, Rad, radLat1, radLat2, radDist;
+        double distance, ret;
+
+        EARTH_R = 6371000.0;
+        Rad = Math.PI/180;
+        radLat1 = Rad * ngpsy;
+        radLat2 = Rad * rgpsy;
+        radDist = Rad * (ngpsx - rgpsx);
+
+        distance = Math.sin(radLat1) * Math.sin(radLat2);
+        distance = distance + Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radDist);
+        ret = EARTH_R * Math.acos(distance);
+
+        double rslt = Math.round(Math.round(ret) / 1000);
+        String result = rslt + " km";
+        if(rslt == 0) result = Math.round(ret) +" m";
+
+        return result;
+    }
 
     @Override
     public void onPause() {

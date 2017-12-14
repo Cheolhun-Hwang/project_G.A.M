@@ -54,7 +54,7 @@ import static java.lang.Thread.State.RUNNABLE;
 public class MainActivity extends AppCompatActivity {
     private final static int SIG_LOGOUT = 4004;
 
-    private boolean isGPS;
+    private static boolean isGPS;
     private double nowLon;
     private double nowLat;
     private String nowSpot;
@@ -107,12 +107,6 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setCouponlist(ArrayList<CouponItem> couponlist) {
         MainActivity.couponlist = couponlist;
-    }
-    public boolean isGPS() {
-        return isGPS;
-    }
-    public void setGPS(boolean GPS) {
-        isGPS = GPS;
     }
 
     private ImageButton Map;
@@ -289,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
 
         //guide
         guidelist = new ArrayList<GuideItem>();
-        String res_guide = new SendGet("search/guide", ("?dist=1&gpsx="+nowLon+"&gpsy="+nowLat)).SendGet();
+        String res_guide = new SendGet("search/guide", ("?dist=2&gpsx="+nowLon+"&gpsy="+nowLat)).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_guide);
         JSONObject guide_data = null;
         try {
@@ -314,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
 
         //event
         eventlist = new ArrayList<EventItem>();
-        String res_event = new SendGet("search/event", ("?dist=1&gpsx="+nowLon+"&gpsy="+nowLat)).SendGet();
+        String res_event = new SendGet("search/event", ("?dist=2&gpsx="+nowLon+"&gpsy="+nowLat)).SendGet();
         Log.d("Res NOTICE", "RESULT : " + res_event);
         JSONObject event_data = null;
         try {
@@ -367,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
 
     // 위치 정보 확인을 위해 정의한 메소드(위치 정보 갱신)
     private void startLocationService() {
+        Toast.makeText(getApplicationContext(), "위치 확인이 시작되었습니다.", Toast.LENGTH_SHORT).show();
         // 위치 관리자 객체 참조
         gmanager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -400,7 +395,6 @@ public class MainActivity extends AppCompatActivity {
         } catch(SecurityException ex) {
             ex.printStackTrace();
         }
-        Toast.makeText(getApplicationContext(), "위치 확인이 시작되었습니다.", Toast.LENGTH_SHORT).show();
     }
 
     // 위치 리스너 클래스 정의
@@ -411,10 +405,12 @@ public class MainActivity extends AppCompatActivity {
             nowLat = location.getLatitude();
             nowLon = location.getLongitude();
 
-            String msg = "Latitude : "+  location.getLatitude() + "\nLongitude:"+ location.getLongitude();
-            searchLocation(location.getLatitude(), location.getLongitude());
-            Log.i("GPSListener", msg);
-
+            Log.e("GPS", "GPS Listener isGPS : " + isGPS);
+            if(isGPS) {
+                String msg = "Latitude : " + location.getLatitude() + "\nLongitude:" + location.getLongitude();
+                searchLocation(location.getLatitude(), location.getLongitude());
+                Log.i("GPSListener", msg);
+            }
         }
 
         public void onProviderDisabled(String provider) {
@@ -484,6 +480,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == SIG_LOGOUT){
+            //로그아웃 요청 시 응답에 따른 처리
             if(resultCode == RESULT_OK){
                 if(mGoogleApiClient.isConnected()){
                     signout();
@@ -491,17 +488,23 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), LoginActivity.class));
                 finish();
             }else if(resultCode == 2002){
+                //GPS 값 전송 설정값에 따른 처리
                 boolean isGPS_setting =(boolean) data.getBooleanExtra("gps", false);
                 user=(Account) data.getSerializableExtra("user");
                 Log.d("isGPS", "GPS : " + isGPS );
 
-                if((isGPS!=isGPS_setting)){
-                    isGPS = isGPS_setting;
-                    startLocationService();
+                if(isGPS_setting){
+                    if((isGPS!=isGPS_setting)){
+                        Log.e("GPS", "isGPS : " + isGPS);
+                        startLocationService();
+                    }
                 }else{
                     Log.d("GPS", "GPS END");
                     gmanager.removeUpdates(gpsListener);
+                    gpsListener=null;
+                    gmanager=null;
                 }
+                isGPS = isGPS_setting;
             }
         }
     }
